@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npm run:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Skill(shadcn)",
+      "Bash(npx shadcn@latest add navigation-menu dropdown-menu avatar separator scroll-area tooltip skeleton badge -y)",
+      "Bash(npx shadcn@latest add chart -y)"
     ]
   },
   "enabledPlugins": {

@@ -51,6 +51,7 @@ application-local.yml
 application-local.properties
 application-secrets.yml
 application-secrets.properties
+application-dev.yml
 
 # Spring Boot
 admin-backend/src/main/resources/application-local.yml

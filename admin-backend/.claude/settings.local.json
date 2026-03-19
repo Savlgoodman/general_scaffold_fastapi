@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Remove-Item -Force 'H:\\\\General_Scaffold\\\\general_scaffold_spring\\\\admin-backend\\\\src\\\\main\\\\java\\\\com\\\\scaffold\\\\admin\\\\model\\\\User.java', 'H:\\\\General_Scaffold\\\\general_scaffold_spring\\\\admin-backend\\\\src\\\\main\\\\java\\\\com\\\\scaffold\\\\admin\\\\mapper\\\\UserMapper.java' -ErrorAction SilentlyContinue; Get-ChildItem 'H:\\\\General_Scaffold\\\\general_scaffold_spring\\\\admin-backend\\\\src\\\\main\\\\java\\\\com\\\\scaffold\\\\admin\\\\mapper\\\\' -Name; Get-ChildItem 'H:\\\\General_Scaffold\\\\general_scaffold_spring\\\\admin-backend\\\\src\\\\main\\\\java\\\\com\\\\scaffold\\\\admin\\\\model\\\\entity\\\\' -Name\")",
+      "Bash(mvn compile:*)"
+    ]
+  }
+}
