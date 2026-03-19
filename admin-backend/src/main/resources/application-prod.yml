@@ -1,0 +1,25 @@
+database:
+  host: "${DB_HOST}"
+  port: ${DB_PORT:15432}
+  username: "${DB_USERNAME}"
+  password: "${DB_PASSWORD}"
+  name: "${DB_NAME}"
+
+redis:
+  host: "${REDIS_HOST}"
+  port: ${REDIS_PORT:16379}
+  password: "${REDIS_PASSWORD}"
+  db: 0
+  max_connections: 50
+
+jwt:
+  secret: "${JWT_SECRET}"
+  access-expiration: 1800000
+  refresh-expiration: 604800000
+
+logging:
+  level:
+    root: WARN
+    com.scaffold.admin: INFO
+  file:
+    name: /var/log/admin-backend/admin-backend.log

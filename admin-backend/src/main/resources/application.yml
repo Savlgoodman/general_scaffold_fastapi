@@ -1,0 +1,81 @@
+server:
+  port: 8080
+  tomcat:
+    apr:
+      enabled: false
+
+spring:
+  application:
+    name: admin-backend
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://${database.host}:${database.port}/${database.name}
+    username: ${database.username}
+    password: ${database.password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: AdminHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  data:
+    redis:
+      host: ${redis.host}
+      port: ${redis.port}
+      password: ${redis.password}
+      database: ${redis.db}
+      lettuce:
+        pool:
+          max-active: ${redis.max_connections}
+          max-idle: 10
+          min-idle: 5
+          max-wait: -1ms
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.scaffold.admin.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+jwt:
+  secret: ${jwt.secret:your-256-bit-secret-key-change-in-production}
+  access-expiration: ${jwt.access-expiration:1800000}
+  refresh-expiration: ${jwt.refresh-expiration:604800000}
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:5173
+
+logging:
+  level:
+    root: INFO
+    com.scaffold.admin: DEBUG
+    org.springframework.web: INFO
+    org.apache.catalina: INFO
+    com.zaxxer.hikari: INFO
+    com.baomidou: INFO
+    javax.management.remote.rmi: ERROR
+    sun.rmi: ERROR
+  file:
+    name: logs/admin-backend.log
