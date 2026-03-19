@@ -4,8 +4,6 @@ admin-backend/target/
 *.jar
 *.war
 *.ear
-*.log
-logs/
 
 # Maven
 admin-backend/pom.xml.tag
