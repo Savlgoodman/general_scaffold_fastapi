@@ -1,0 +1,63 @@
+# Java / Spring Boot
+admin-backend/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+logs/
+
+# Maven
+admin-backend/pom.xml.tag
+admin-backend/pom.xml.releaseBackup
+admin-backend/pom.xml.versionsBackup
+admin-backend/pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+admin-backend/.gradle/
+admin-backend/build/
+
+# Node.js / Frontend
+admin-frontend/node_modules/
+admin-frontend/dist/
+admin-frontend/dist-ssr/
+admin-frontend/.vite/
+admin-frontend/.output/
+
+# npm
+admin-frontend/package-lock.json
+admin-frontend/yarn.lock
+admin-frontend/pnpm-lock.yaml
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.properties
+application-secrets.yml
+application-secrets.properties
+
+# Spring Boot
+admin-backend/src/main/resources/application-local.yml
+admin-backend/src/main/resources/application-local.properties
+
+# Logs
+logs/
+*.log

@@ -1,8 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="AdminDev" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ENABLE_JMX_AGENT" value="false" />
     <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
     <module name="admin-backend" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.admin.AdminApplication" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.scaffold.admin.AdminApplication" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.example.admin.*" />
