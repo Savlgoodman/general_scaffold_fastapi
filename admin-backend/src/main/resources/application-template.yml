@@ -1,0 +1,18 @@
+database:
+  host: "47******2"
+  port: 15432
+  username: "pos***s"
+  password: "A*****"
+  name: "scaffold_spring_dev"
+
+redis:
+  host: "47***2"
+  port: 163*79
+  password: "A*******"
+  db: 0
+  max_connections: 50
+
+jwt:
+  secret: "****************"
+  access-expiration: 1800000
+  refresh-expiration: 604800000
