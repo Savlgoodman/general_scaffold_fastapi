@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
-@Tag(name = "健康检查", description = "用于确认服务是否正常运行")
+@Tag(name = "health", description = "用于确认服务是否正常运行")
 @RestController
 public class HealthController {
 

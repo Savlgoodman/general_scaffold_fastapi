@@ -41,7 +41,7 @@ mvn test
 **数据库表名**：所有管理后台表均以 `admin_` 为前缀（如 `admin_user`、`admin_role`）。软删除通过 `is_deleted` 字段 + MyBatis-Plus `@TableLogic` 实现。
 
 **OpenAPI 注解规范（前端代码生成的关键）**：
-- Controller 类：`@Tag(name = "模块名", description = "模块描述")`
+- Controller 类：`@Tag(name = "模块名", description = "模块描述")`，其中模块名必须使用英文，必须。
 - 方法：`@Operation(summary = "简要说明", description = "详细描述")`
 - DTO 字段：`@Schema(description = "字段说明", example = "示例值")`
 - 错误响应：`@ApiResponse(responseCode = "4xx", description = "错误说明")`
