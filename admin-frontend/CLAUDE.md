@@ -37,86 +37,104 @@ src/
 
 ## 主题系统
 
+### 架构
+
+```
+CSS 变量 (:root / .dark / .warm)  →  Tailwind 配置映射  →  组件使用
+```
+
+主题色定义在两处：
+1. `src/index.css` - CSS 变量定义
+2. `tailwind.config.js` - Tailwind 工具类映射
+
 ### CSS 变量说明
 
-shadcn/ui 使用 CSS 变量实现主题，所有颜色定义在 `src/index.css` 中：
+所有颜色定义在 `src/index.css` 的 `:root` 中，使用 HSL 格式：
 
 ```css
 :root {
-  --background: 背景色
-  --foreground: 文字色
-  --primary: 主色调（按钮等）
-  --primary-foreground: 主色调文字
-  --secondary: 次要色调
-  --secondary-foreground: 次要色调文字
-  --muted: 弱化背景
-  --muted-foreground: 弱化文字
-  --accent: 强调色
-  --accent-foreground: 强调色文字
-  --destructive: 危险/错误色
-  --destructive-foreground: 危险色文字
-  --border: 边框色
-  --input: 输入框边框
-  --ring: 聚焦环颜色
-  --radius: 圆角大小
+  --background: 30 45.45% 95.69%;     /* 米白背景 */
+  --foreground: 230 90% 7.84%;       /* 深蓝标题 */
+  --primary: 39.66 26.7% 43.33%;     /* 暖棕主色 */
+  --primary-foreground: 60 100% 99.8%;
+  --secondary: 31.11 39.13% 86.47%;  /* 暖米色 */
+  --secondary-foreground: 230 90% 7.84%;
+  --muted: 31.11 39.13% 86.47%;
+  --muted-foreground: 39.18 27.68% 34.71%;  /* 棕色正文 */
+  --accent: 31.11 39.13% 86.47%;
+  --accent-foreground: 230 90% 7.84%;
+  --destructive: 4.77 87.13% 60.39%;  /* 珊瑚红 */
+  --destructive-foreground: 60 100% 99.8%;
+  --border: 30 20% 82%;
+  --input: 30 20% 82%;
+  --ring: 39.66 26.7% 43.33%;
+  --radius: 0.75rem;                  /* 圆角 12px */
   --sidebar-*: 侧边栏专用颜色
+  --chart-*: 图表颜色
+}
+```
+
+### Tailwind 配置映射
+
+`tailwind.config.js` 将 CSS 变量映射到工具类：
+
+```js
+colors: {
+  primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+  background: 'hsl(var(--background))',
+  foreground: 'hsl(var(--foreground))',
+  // ...
 }
 ```
 
 ### 添加新主题
 
-在 `src/index.css` 的 `.dark` 后添加新的主题类：
-
-```css
-.warm {
-  --background: 36 33% 96%;      /* 米白背景 */
-  --foreground: 224 71% 4%;      /* 深海军蓝文字 */
-  --primary: 35 24% 42%;         /* 暖棕色主色 */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 30 20% 90%;
-  --secondary-foreground: 224 71% 4%;
-  --muted: 30 15% 88%;
-  --muted-foreground: 30 12% 35%;
-  --accent: 30 20% 90%;
-  --accent-foreground: 224 71% 4%;
-  --destructive: 4 90% 58%;       /* 珊瑚红 */
-  --destructive-foreground: 0 0% 100%;
-  --border: 30 15% 82%;
-  --input: 30 15% 82%;
-  --ring: 35 24% 42%;
-  /* 侧边栏变量同理 */
-}
-```
+在 `src/index.css` 添加新主题类（如 `.warm`），并更新 `src/store/theme.ts` 的类型。
 
 ### 颜色格式
 
 使用 HSL 格式：`色相 饱和度% 明度%`
-- 亮色主题：明度值较高
-- 暗色主题：明度值较低
-- 暖色主题：色相在 30-40（暖棕色调）
+
+| 主题 | 特点 |
+|------|------|
+| 默认 (暖色) | 色相 30-40，暖棕色调 |
+| `.dark` | 明度值较低（3.9%） |
+| `.warm` | 奶油背景 + 珊瑚红点缀 |
 
 ### 主题切换实现
 
-1. **Store**: `src/store/theme.ts` - 使用 Zustand 管理主题状态
-2. **Provider**: `src/components/providers/ThemeProvider.tsx` - 应用主题到 DOM
-3. **切换逻辑**: 在 `html` 元素上添加/移除 class
+| 文件 | 职责 |
+|------|------|
+| `src/store/theme.ts` | Zustand 状态管理，持久化到 localStorage |
+| `src/components/providers/ThemeProvider.tsx` | 键盘快捷键 + 系统主题监听 |
+| `src/components/layout/Header.tsx` | 主题切换下拉菜单 |
 
 ```typescript
-// 主题类型
 type Theme = 'light' | 'dark' | 'warm' | 'system'
 
-// 应用主题
 const applyTheme = (theme: 'light' | 'dark' | 'warm') => {
   document.documentElement.classList.remove('light', 'dark', 'warm')
   document.documentElement.classList.add(theme)
 }
 ```
 
+### 组件使用
+
+```tsx
+// 正确：使用语义化颜色
+<div className="bg-primary text-primary-foreground" />
+<div className="bg-background text-foreground" />
+<div className="text-muted-foreground" />
+
+// 错误：硬编码颜色
+<div className="bg-blue-500" />
+```
+
 ### 注意事项
 
-- 使用语义化颜色变量（`bg-primary` 而非 `bg-blue-500`）
-- 不要在组件中硬编码颜色
+- **始终使用语义化颜色变量**，不要硬编码颜色值
 - 图表颜色需要在 `ChartContainer` 的 `config` 中单独配置
+- `border-radius` 通过 `--radius` 变量统一管理（当前 12px）
 
 ## 添加 shadcn 组件
 ```bash
@@ -174,3 +192,6 @@ npx shadcn@latest add <component>
 
 - 描述使用中文、不加句号
 - 保持简洁（一行 50 字符以内为佳）
+
+
+
