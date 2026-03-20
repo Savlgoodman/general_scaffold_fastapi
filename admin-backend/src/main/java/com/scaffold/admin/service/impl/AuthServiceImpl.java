@@ -26,6 +26,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -84,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
-            // 验证用户名密码
+            // 验证用户名密码（Spring Security内部会调用UserDetails.isEnabled()检查用户状态）
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, loginDTO.getPassword())
             );
@@ -94,18 +95,15 @@ public class AuthServiceImpl implements AuthService {
             AdminUserServiceImpl.AdminUserDetails userDetails = (AdminUserServiceImpl.AdminUserDetails) authentication.getPrincipal();
             AdminUser user = adminUserMapper.selectById(userDetails.getId());
 
-            // 检查用户状态
-            if (user.getStatus() == null || user.getStatus() != 1) {
-                recordLoginLog(username, "failed", ip, userAgent, "账户已被禁用");
-                throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被禁用");
-            }
-
             // 清除登录失败计数
             clearLoginFailCount(username);
 
             // 生成Token
             String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername());
             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getUsername());
+
+            // 存储Refresh Token用于精确注销
+            storeRefreshToken(user.getId(), refreshToken);
 
             // 记录登录日志
             recordLoginLog(username, "success", ip, userAgent, "登录成功");
@@ -119,6 +117,9 @@ public class AuthServiceImpl implements AuthService {
         } catch (LockedException e) {
             recordLoginLog(username, "locked", ip, userAgent, "账户已被锁定");
             throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被锁定");
+        } catch (DisabledException e) {
+            recordLoginLog(username, "disabled", ip, userAgent, "账户已被禁用");
+            throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被禁用");
         }
     }
 
@@ -150,6 +151,9 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getUsername());
 
+        // 存储Refresh Token用于精确注销
+        storeRefreshToken(user.getId(), refreshToken);
+
         // 记录登录日志
         String ip = getClientIp();
         String userAgent = httpServletRequest.getHeader("User-Agent");
@@ -177,6 +181,12 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.UNAUTHORIZED, "无效的Refresh Token");
         }
 
+        // 检查是否是当前有效的Refresh Token（防止被盗用）
+        String storedRefreshToken = getStoredRefreshToken(userId);
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "Refresh Token已失效");
+        }
+
         // 获取用户信息
         AdminUser user = adminUserMapper.selectById(userId);
         if (user == null) {
@@ -195,6 +205,9 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername());
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getUsername());
 
+        // 存储新的Refresh Token
+        storeRefreshToken(user.getId(), newRefreshToken);
+
         return buildLoginVO(user, newAccessToken, newRefreshToken);
     }
 
@@ -204,9 +217,19 @@ public class AuthServiceImpl implements AuthService {
             accessToken = accessToken.substring(7);
         }
         if (StrUtil.isNotBlank(accessToken)) {
-            // 将Access Token和Refresh Token都加入黑名单
+            // 将Access Token加入黑名单
             jwtTokenProvider.addToBlacklist(accessToken);
-            // 注意：Refresh Token需要单独处理，这里简化处理，实际可以存储用户的refreshToken来精确注销
+
+            // 从Access Token中获取userId，注销对应的Refresh Token
+            Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+            if (userId != null) {
+                String storedRefreshToken = getStoredRefreshToken(userId);
+                if (storedRefreshToken != null) {
+                    jwtTokenProvider.addToBlacklist(storedRefreshToken);
+                    deleteStoredRefreshToken(userId);
+                }
+            }
+
             log.debug("用户登出，Token已加入黑名单");
         }
     }
@@ -245,6 +268,38 @@ public class AuthServiceImpl implements AuthService {
     private void clearLoginFailCount(String username) {
         String key = RedisKeys.LOGIN_FAIL.key(username);
         redisTemplate.delete(key);
+    }
+
+    /**
+     * 存储用户的Refresh Token（用于精确注销）
+     */
+    private void storeRefreshToken(Long userId, String refreshToken) {
+        String key = RedisKeys.USER_REFRESH_TOKEN.key(userId.toString());
+        // Refresh Token有效期为7天
+        redisTemplate.opsForValue().set(key, refreshToken, refreshExpiration(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 获取用户当前存储的Refresh Token
+     */
+    private String getStoredRefreshToken(Long userId) {
+        String key = RedisKeys.USER_REFRESH_TOKEN.key(userId.toString());
+        return (String) redisTemplate.opsForValue().get(key);
+    }
+
+    /**
+     * 删除用户存储的Refresh Token
+     */
+    private void deleteStoredRefreshToken(Long userId) {
+        String key = RedisKeys.USER_REFRESH_TOKEN.key(userId.toString());
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 获取Refresh Token有效期（毫秒）
+     */
+    private long refreshExpiration() {
+        return jwtTokenProvider.getRefreshTokenExpiration() * 1000;
     }
 
     /**
