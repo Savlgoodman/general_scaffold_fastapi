@@ -16,7 +16,6 @@ import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
 import com.scaffold.admin.model.vo.UserVO;
 import com.scaffold.admin.security.JwtTokenProvider;
-import com.scaffold.admin.service.AdminUserService;
 import com.scaffold.admin.service.AuthService;
 import com.scaffold.admin.util.AuthCaptchaUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +54,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
     private final HttpServletRequest httpServletRequest;
-    private final AdminUserService adminUserService;
 
     @Override
     public CaptchaVO generateCaptcha() {

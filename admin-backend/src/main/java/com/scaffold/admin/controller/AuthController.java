@@ -6,8 +6,6 @@ import com.scaffold.admin.model.dto.RefreshTokenDTO;
 import com.scaffold.admin.model.dto.RegisterDTO;
 import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
-import com.scaffold.admin.security.JwtTokenProvider;
-import com.scaffold.admin.service.AdminUserService;
 import com.scaffold.admin.service.AuthService;
 import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 获取图形验证码

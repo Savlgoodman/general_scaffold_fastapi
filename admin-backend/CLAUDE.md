@@ -61,6 +61,31 @@ mvn test
 - `handler/` — `@RestControllerAdvice` 全局异常处理器
 - `util/` — 工具类（纯算法、无状态）
 
+### 依赖注入规范
+
+**构造器注入 + `@RequiredArgsConstructor`（强制）**：
+
+```java
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl {
+    private final AdminUserMapper adminUserMapper;      // 注入
+    private final AuthenticationManager authenticationManager;  // 注入
+    // 无需构造器、setter、@Autowired
+}
+```
+
+**禁止**：
+- `@Autowired` 字段注入（即使能工作，也不允许）
+- `private` 可变字段（不用 `final`）
+- 服务内直接 `new` 依赖（违反依赖倒置）
+
+**原则**：
+- 所有依赖必须通过构造器注入，使用 Lombok `@RequiredArgsConstructor` 自动生成
+- `final` 字段确保不可变性，编译时检查依赖完整性
+- Service/Controller/Config 等组件类必须使用 `@RequiredArgsConstructor`
+- Util 工具类不使用 DI（无状态，纯算法）
+
 ### 关键约定
 
 **数据库表名**：所有管理后台表均以 `admin_` 为前缀（如 `admin_user`、`admin_role`）。软删除通过 `is_deleted` 字段 + MyBatis-Plus `@TableLogic` 实现。
