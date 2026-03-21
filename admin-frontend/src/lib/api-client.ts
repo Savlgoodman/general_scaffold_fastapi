@@ -31,10 +31,14 @@ apiClient.interceptors.response.use(
     return response
   },
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Token过期，清除登录状态
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+    // 401 或 403 未登录 都自动退出
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // 检查是否是真的未登录（message为"未登录"）
+      const data = error.response.data as { code?: number; message?: string } | undefined
+      if (error.response.status === 401 || data?.message === '未登录') {
+        useAuthStore.getState().logout()
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }

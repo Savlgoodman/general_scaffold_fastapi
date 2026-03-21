@@ -1,5 +1,6 @@
-import { Bell, Search, Sun, Moon, Monitor, Coffee } from "lucide-react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
+import { useAuthStore } from "@/store/auth"
 import { Input } from "@/components/ui/input"
 import {
   Avatar,
@@ -20,6 +21,7 @@ import { Separator } from "@/components/ui/separator"
 
 function Header() {
   const { theme, setTheme } = useThemeStore()
+  const { logout, user } = useAuthStore()
 
   const themeIcon = {
     light: Sun,
@@ -29,6 +31,14 @@ function Header() {
   }[theme]
 
   const ThemeIcon = themeIcon
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = '/login'
+  }
+
+  // 获取用户显示名
+  const displayName = user?.username || user?.nickname || 'Admin'
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -94,9 +104,9 @@ function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="size-8">
-                <AvatarImage src="" alt="Admin" />
+                <AvatarImage src="" alt={displayName} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  AD
+                  {displayName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -104,9 +114,9 @@ function Header() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Admin</p>
+                <p className="text-sm font-medium leading-none">{displayName}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  admin@example.com
+                  {user?.username}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -114,7 +124,8 @@ function Header() {
             <DropdownMenuItem>个人中心</DropdownMenuItem>
             <DropdownMenuItem>设置</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+              <LogOut className="w-4 h-4 mr-2" />
               退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>
