@@ -20,8 +20,21 @@ interface Props {
   onSaved?: () => void
 }
 
-const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-emerald-500', POST: 'bg-blue-500', PUT: 'bg-amber-500', DELETE: 'bg-red-500', '*': 'bg-purple-500',
+const METHOD_STYLES: Record<string, string> = {
+  GET:    'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+  POST:   'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  PUT:    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  DELETE: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  '*':    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+}
+
+const MethodTag = ({ method }: { method?: string }) => {
+  const m = method || '*'
+  return (
+    <span className={`inline-flex items-center justify-center w-[52px] shrink-0 rounded px-1 py-0.5 text-[11px] font-semibold font-mono ${METHOD_STYLES[m] || METHOD_STYLES['*']}`}>
+      {m}
+    </span>
+  )
 }
 
 export default function RolePermissionDialog({ open, onOpenChange, roleId, roleName, onSaved }: Props) {
@@ -120,33 +133,34 @@ export default function RolePermissionDialog({ open, onOpenChange, roleId, roleN
               const gp = group.groupPermission
               return (
                 <div key={group.groupKey} className="border rounded-lg">
-                  <div className="flex items-center gap-2 p-3 bg-muted/30">
-                    <button onClick={() => toggleExpand(group.groupKey!)} className="p-0.5 hover:bg-muted rounded">
+                  {/* 组头 */}
+                  <div className="flex items-center gap-2.5 px-3 py-2.5 bg-muted/30">
+                    <button onClick={() => toggleExpand(group.groupKey!)} className="p-0.5 hover:bg-muted rounded shrink-0">
                       {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     </button>
-                    {gp && <Checkbox checked={groupGranted} onCheckedChange={() => toggleGroup(group)} className="h-4 w-4" />}
-                    <FolderOpen className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{group.groupName}</span>
-                    {gp && <Badge variant="outline" className="text-xs ml-1">{gp.method} {gp.path}</Badge>}
-                    <span className="text-xs text-muted-foreground ml-auto">{group.assignedCount}/{group.totalCount}</span>
-                    {groupGranted && <Badge className="bg-emerald-500 text-xs">组已授权</Badge>}
+                    {gp && <Checkbox checked={groupGranted} onCheckedChange={() => toggleGroup(group)} className="h-4 w-4 shrink-0" />}
+                    <FolderOpen className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="font-medium text-sm truncate">{group.groupName}</span>
+                    <span className="text-xs text-muted-foreground ml-auto shrink-0">{group.assignedCount}/{group.totalCount}</span>
+                    {groupGranted && <Badge className="bg-emerald-500 text-[11px] shrink-0">组已授权</Badge>}
                   </div>
+                  {/* 子权限 */}
                   {expanded && (
-                    <div className="px-3 pb-3 pt-1 space-y-1.5">
+                    <div className="px-3 pb-2.5 pt-1 space-y-0.5">
                       {group.children?.map(child => {
                         const covered = groupGranted
                         const checked = covered || selectedIds.has(child.id!)
                         return (
-                          <div key={child.id} className="flex items-center gap-2 pl-7 py-1">
-                            <Checkbox checked={checked} disabled={covered} onCheckedChange={() => child.id && toggleChild(child.id)} className="h-4 w-4" />
-                            <Badge variant="secondary" className={`text-xs text-white ${METHOD_COLORS[child.method || ''] || 'bg-gray-500'}`}>{child.method}</Badge>
-                            <span className="text-sm">{child.name}</span>
-                            <span className="text-xs text-muted-foreground ml-1">{child.path}</span>
-                            {covered && <Badge variant="outline" className="text-xs ml-auto text-emerald-600 border-emerald-300">已被组覆盖</Badge>}
+                          <div key={child.id} className="flex items-center gap-2 py-1.5 pl-8 rounded-md hover:bg-muted/30">
+                            <Checkbox checked={checked} disabled={covered} onCheckedChange={() => child.id && toggleChild(child.id)} className="h-4 w-4 shrink-0" />
+                            <MethodTag method={child.method} />
+                            <span className="text-sm truncate min-w-0 flex-1">{child.name}</span>
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px] hidden sm:block">{child.path}</span>
+                            {covered && <Badge variant="outline" className="text-[11px] shrink-0 text-emerald-600 border-emerald-300">组覆盖</Badge>}
                           </div>
                         )
                       })}
-                      {(!group.children || group.children.length === 0) && <div className="text-sm text-muted-foreground pl-7">无子权限</div>}
+                      {(!group.children || group.children.length === 0) && <div className="text-sm text-muted-foreground pl-8 py-2">无子权限</div>}
                     </div>
                   )}
                 </div>
