@@ -620,28 +620,20 @@ public class RBACServiceImpl implements RBACService {
     @Override
     @Transactional
     public void removeUserPermissionOverride(Long userId, Long overrideId) {
-        AdminUserPermissionOverride existing = overrideMapper.selectOne(
+        // 使用 delete 让 @TableLogic 自动处理逻辑删除
+        overrideMapper.delete(
             new LambdaQueryWrapper<AdminUserPermissionOverride>()
                 .eq(AdminUserPermissionOverride::getId, overrideId)
                 .eq(AdminUserPermissionOverride::getUserId, userId)
-                .eq(AdminUserPermissionOverride::getIsDeleted, 0)
         );
-
-        if (existing != null) {
-            existing.setIsDeleted(1);
-            overrideMapper.updateById(existing);
-        }
     }
 
     @Override
     @Transactional
     public void clearUserPermissionOverrides(Long userId) {
-        overrideMapper.update(
-            new AdminUserPermissionOverride(),
-            new LambdaUpdateWrapper<AdminUserPermissionOverride>()
+        overrideMapper.delete(
+            new LambdaQueryWrapper<AdminUserPermissionOverride>()
                 .eq(AdminUserPermissionOverride::getUserId, userId)
-                .eq(AdminUserPermissionOverride::getIsDeleted, 0)
-                .set(AdminUserPermissionOverride::getIsDeleted, 1)
         );
     }
 
