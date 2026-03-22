@@ -6,6 +6,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type DeleteBatchParams = {
-ids: number[];
+export type ListRolesParams = {
+pageNum?: number;
+pageSize?: number;
+keyword?: string;
 };

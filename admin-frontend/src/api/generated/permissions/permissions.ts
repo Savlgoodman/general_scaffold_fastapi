@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  List1Params,
+  ListPermissionsParams,
   RListPermissionGroupVO,
   RPagePermissionBaseVO,
   RPermissionBaseVO
@@ -23,8 +23,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * 分页获取权限列表
  * @summary 权限列表
  */
-const list1 = (
-    params?: List1Params,
+const listPermissions = (
+    params?: ListPermissionsParams,
  options?: SecondParameter<typeof customInstance<RPagePermissionBaseVO>>,) => {
       return customInstance<RPagePermissionBaseVO>(
       {url: `/api/admin/permissions`, method: 'GET',
@@ -36,7 +36,7 @@ const list1 = (
  * 获取单个权限详情
  * @summary 权限详情
  */
-const getDetail1 = (
+const getPermissionDetail = (
     id: number,
  options?: SecondParameter<typeof customInstance<RPermissionBaseVO>>,) => {
       return customInstance<RPermissionBaseVO>(
@@ -48,7 +48,7 @@ const getDetail1 = (
  * 获取所有权限分组（用于角色分配选择）
  * @summary 权限分组列表
  */
-const getGroups = (
+const getPermissionGroups = (
     
  options?: SecondParameter<typeof customInstance<RListPermissionGroupVO>>,) => {
       return customInstance<RListPermissionGroupVO>(
@@ -56,7 +56,7 @@ const getGroups = (
     },
       options);
     }
-  return {list1,getDetail1,getGroups}};
-export type List1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['list1']>>>
-export type GetDetail1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getDetail1']>>>
-export type GetGroupsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getGroups']>>>
+  return {listPermissions,getPermissionDetail,getPermissionGroups}};
+export type ListPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['listPermissions']>>>
+export type GetPermissionDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getPermissionDetail']>>>
+export type GetPermissionGroupsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getPermissionGroups']>>>

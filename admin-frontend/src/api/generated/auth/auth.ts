@@ -26,7 +26,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * 使用Refresh Token获取新的Access Token
  * @summary 刷新Token
  */
-const refresh = (
+const refreshToken = (
     refreshTokenDTO: BodyType<RefreshTokenDTO>,
  options?: SecondParameter<typeof customInstance<RLoginVO>>,) => {
       return customInstance<RLoginVO>(
@@ -86,8 +86,8 @@ const getCaptcha = (
     },
       options);
     }
-  return {refresh,logout,login,getCurrentUser,getCaptcha}};
-export type RefreshResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['refresh']>>>
+  return {refreshToken,logout,login,getCurrentUser,getCaptcha}};
+export type RefreshTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['refreshToken']>>>
 export type LogoutResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['logout']>>>
 export type LoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['login']>>>
 export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['getCurrentUser']>>>

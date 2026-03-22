@@ -6,10 +6,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * 批量撤销权限DTO
- */
-export interface RevokePermissionsDTO {
-  /** 权限ID列表 */
-  permissionIds: number[];
-}
+export type ListPermissionsParams = {
+pageNum?: number;
+pageSize?: number;
+keyword?: string;
+};

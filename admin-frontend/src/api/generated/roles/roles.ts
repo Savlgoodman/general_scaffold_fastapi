@@ -7,13 +7,12 @@
  */
 import type {
   CreateRoleDTO,
-  DeleteBatchParams,
-  ListParams,
+  DeleteRolesBatchParams,
+  ListRolesParams,
   RPageRoleBaseVO,
   RRoleBaseVO,
   RRolePermissionFullVO,
   RVoid,
-  RevokePermissionsDTO,
   SyncRolePermissionsDTO,
   UpdateRoleDTO
 } from '../model';
@@ -30,7 +29,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * 获取角色详情
  * @summary 角色详情
  */
-const getDetail = (
+const getRoleDetail = (
     id: number,
  options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
       return customInstance<RRoleBaseVO>(
@@ -42,7 +41,7 @@ const getDetail = (
  * 更新角色信息
  * @summary 更新角色
  */
-const update = (
+const updateRole = (
     id: number,
     updateRoleDTO: BodyType<UpdateRoleDTO>,
  options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
@@ -57,7 +56,7 @@ const update = (
  * 删除单个角色
  * @summary 删除角色
  */
-const _delete = (
+const deleteRole = (
     id: number,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
@@ -66,10 +65,10 @@ const _delete = (
       options);
     }
   /**
- * 获取角色所有权限���分配状态（含组覆盖标记）
+ * 获取角色所有权限及分配状态（含组覆盖标记）
  * @summary 角色权限完整视图
  */
-const getPermissions = (
+const getRolePermissions = (
     id: number,
  options?: SecondParameter<typeof customInstance<RRolePermissionFullVO>>,) => {
       return customInstance<RRolePermissionFullVO>(
@@ -81,7 +80,7 @@ const getPermissions = (
  * 原子同步角色权限（对比差异，批量增删改）
  * @summary 同步角色权限
  */
-const syncPermissions = (
+const syncRolePermissions = (
     id: number,
     syncRolePermissionsDTO: BodyType<SyncRolePermissionsDTO>,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
@@ -93,26 +92,11 @@ const syncPermissions = (
       options);
     }
   /**
- * 批量撤销角色权限
- * @summary 批量撤销角色权限
- */
-const revokePermissions = (
-    id: number,
-    revokePermissionsDTO: BodyType<RevokePermissionsDTO>,
- options?: SecondParameter<typeof customInstance<RVoid>>,) => {
-      return customInstance<RVoid>(
-      {url: `/api/admin/roles/${id}/permissions`, method: 'DELETE',
-      headers: {'Content-Type': 'application/json', },
-      data: revokePermissionsDTO
-    },
-      options);
-    }
-  /**
  * 分页获取角色列表
  * @summary 角色列表
  */
-const list = (
-    params?: ListParams,
+const listRoles = (
+    params?: ListRolesParams,
  options?: SecondParameter<typeof customInstance<RPageRoleBaseVO>>,) => {
       return customInstance<RPageRoleBaseVO>(
       {url: `/api/admin/roles`, method: 'GET',
@@ -124,7 +108,7 @@ const list = (
  * 创建新角色
  * @summary 创建角色
  */
-const create = (
+const createRole = (
     createRoleDTO: BodyType<CreateRoleDTO>,
  options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
       return customInstance<RRoleBaseVO>(
@@ -138,8 +122,8 @@ const create = (
  * 批量删除角色
  * @summary 批量删除角色
  */
-const deleteBatch = (
-    params: DeleteBatchParams,
+const deleteRolesBatch = (
+    params: DeleteRolesBatchParams,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
       {url: `/api/admin/roles`, method: 'DELETE',
@@ -147,13 +131,12 @@ const deleteBatch = (
     },
       options);
     }
-  return {getDetail,update,_delete,getPermissions,syncPermissions,revokePermissions,list,create,deleteBatch}};
-export type GetDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getDetail']>>>
-export type UpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['update']>>>
-export type _DeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['_delete']>>>
-export type GetPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getPermissions']>>>
-export type SyncPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['syncPermissions']>>>
-export type RevokePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['revokePermissions']>>>
-export type ListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['list']>>>
-export type CreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['create']>>>
-export type DeleteBatchResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteBatch']>>>
+  return {getRoleDetail,updateRole,deleteRole,getRolePermissions,syncRolePermissions,listRoles,createRole,deleteRolesBatch}};
+export type GetRoleDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getRoleDetail']>>>
+export type UpdateRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['updateRole']>>>
+export type DeleteRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteRole']>>>
+export type GetRolePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getRolePermissions']>>>
+export type SyncRolePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['syncRolePermissions']>>>
+export type ListRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['listRoles']>>>
+export type CreateRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['createRole']>>>
+export type DeleteRolesBatchResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteRolesBatch']>>>

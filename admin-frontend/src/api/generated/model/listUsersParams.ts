@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type List1Params = {
+export type ListUsersParams = {
 pageNum?: number;
 pageSize?: number;
 keyword?: string;

@@ -64,27 +64,12 @@ const getUserRoles = (
  * 同步用户角色（全量替换，传入的为最终角色列表）
  * @summary 同步用户角色
  */
-const assignUserRoles = (
+const syncUserRoles = (
     id: number,
     assignRolesDTO: BodyType<AssignRolesDTO>,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
       {url: `/api/admin/admin-users/${id}/roles`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: assignRolesDTO
-    },
-      options);
-    }
-  /**
- * 批量撤销用户角色
- * @summary 批量撤销用户角色
- */
-const revokeUserRoles = (
-    id: number,
-    assignRolesDTO: BodyType<AssignRolesDTO>,
- options?: SecondParameter<typeof customInstance<RVoid>>,) => {
-      return customInstance<RVoid>(
-      {url: `/api/admin/admin-users/${id}/roles`, method: 'DELETE',
       headers: {'Content-Type': 'application/json', },
       data: assignRolesDTO
     },
@@ -115,11 +100,10 @@ const removeUserPermissionOverride = (
     },
       options);
     }
-  return {syncUserOverrides,clearUserPermissionOverrides,getUserRoles,assignUserRoles,revokeUserRoles,getUserPermissions,removeUserPermissionOverride}};
+  return {syncUserOverrides,clearUserPermissionOverrides,getUserRoles,syncUserRoles,getUserPermissions,removeUserPermissionOverride}};
 export type SyncUserOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['syncUserOverrides']>>>
 export type ClearUserPermissionOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['clearUserPermissionOverrides']>>>
 export type GetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserRoles']>>>
-export type AssignUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['assignUserRoles']>>>
-export type RevokeUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['revokeUserRoles']>>>
+export type SyncUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['syncUserRoles']>>>
 export type GetUserPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserPermissions']>>>
 export type RemoveUserPermissionOverrideResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['removeUserPermissionOverride']>>>

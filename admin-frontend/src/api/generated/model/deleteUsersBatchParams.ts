@@ -6,8 +6,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type ListParams = {
-pageNum?: number;
-pageSize?: number;
-keyword?: string;
+export type DeleteUsersBatchParams = {
+ids: number[];
 };

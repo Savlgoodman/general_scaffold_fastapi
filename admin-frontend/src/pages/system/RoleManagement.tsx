@@ -57,7 +57,7 @@ export default function RoleManagement() {
   const fetchRoles = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await rolesApi.list({ pageNum: current, pageSize, keyword: searchKeyword || undefined })
+      const res = await rolesApi.listRoles({ pageNum: current, pageSize, keyword: searchKeyword || undefined })
       if (res.code === 200 && res.data) {
         setRoles(res.data.records || [])
         setTotal(res.data.total || 0)
@@ -86,7 +86,7 @@ export default function RoleManagement() {
     setFormLoading(true)
     setDialogOpen(true)
     try {
-      const res = await rolesApi.getDetail(id)
+      const res = await rolesApi.getRoleDetail(id)
       if (res.code === 200 && res.data) {
         setFormData({
           name: res.data.name || '', code: res.data.code || '',
@@ -108,8 +108,8 @@ export default function RoleManagement() {
     setFormLoading(true)
     try {
       const res = editingId
-        ? await rolesApi.update(editingId, { name: formData.name, description: formData.description, status: formData.status })
-        : await rolesApi.create({ name: formData.name, code: formData.code, description: formData.description, status: formData.status })
+        ? await rolesApi.updateRole(editingId, { name: formData.name, description: formData.description, status: formData.status })
+        : await rolesApi.createRole({ name: formData.name, code: formData.code, description: formData.description, status: formData.status })
 
       if (res.code === 200) {
         toast({ title: editingId ? '更新角色成功' : '创建角色成功' })
@@ -129,7 +129,7 @@ export default function RoleManagement() {
     if (!deletingId) return
     setDeletingLoading(true)
     try {
-      const res = await rolesApi._delete(deletingId)
+      const res = await rolesApi.deleteRole(deletingId)
       if (res.code === 200) {
         toast({ title: '删除角色成功' })
         setDeleteDialogOpen(false)
@@ -196,7 +196,7 @@ export default function RoleManagement() {
                 {loading ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">加载中...</TableCell></TableRow>
                 ) : roles.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">暂��数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : roles.map((role, i) => (
                   <TableRow key={role.id} className={i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
                     <TableCell className="text-center font-mono text-sm py-3">{role.id}</TableCell>

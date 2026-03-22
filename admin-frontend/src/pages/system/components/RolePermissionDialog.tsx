@@ -49,7 +49,7 @@ export default function RolePermissionDialog({ open, onOpenChange, roleId, roleN
     if (!roleId) return
     setLoading(true)
     try {
-      const res = await rolesApi.getPermissions(roleId)
+      const res = await rolesApi.getRolePermissions(roleId)
       if (res.code === 200 && res.data) {
         setData(res.data)
         const assigned = new Set<number>()
@@ -103,7 +103,7 @@ export default function RolePermissionDialog({ open, onOpenChange, roleId, roleN
     setSaving(true)
     try {
       const permissions = Array.from(selectedIds).map(id => ({ permissionId: id, effect: 'GRANT' }))
-      const res = await rolesApi.syncPermissions(roleId, { permissions })
+      const res = await rolesApi.syncRolePermissions(roleId, { permissions })
       if (res.code === 200) {
         toast({ title: '权限分配成功' }); onOpenChange(false); onSaved?.()
       } else {

@@ -45,7 +45,7 @@ export default function PermissionManagement() {
   const fetchGroups = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await permissionsApi.getGroups()
+      const res = await permissionsApi.getPermissionGroups()
       if (res.code === 200 && res.data) {
         setGroups(res.data)
         setExpandedGroups(new Set(res.data.map((g: PermissionGroupVO) => g.groupKey!).filter(Boolean)))

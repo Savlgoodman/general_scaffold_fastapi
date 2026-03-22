@@ -24,7 +24,7 @@ general_scaffold_spring/
 ### 前端 API 调用规范
 
 - **必须使用 generated endpoint 函数**，不手写 API 文件
-- generated 代码使用工厂模式：`const rolesApi = getRoles()` 然后 `rolesApi.list(params)`
+- generated 代码使用工厂模式：`const rolesApi = getRoles()` 然后 `rolesApi.listRoles(params)`
 - 返回类型是 `R<T>` 包装：`{code, message, data}`，用 `res.code === 200 && res.data` 判断
 - generated 类型所有字段都是 optional（`?`），使用时注意 `?? fallback` 或 `!` 断言
 - 自定义 axios 实例在 `src/api/custom-instance.ts`，已配置 token 注入和 401 自动退出
@@ -35,14 +35,16 @@ general_scaffold_spring/
 - 所有 DTO/VO 字段必须有 `@Schema(description = "...")`
 - **内部类命名必须唯一**：不同 VO 中的内部类不能同名（如 `GroupSection`/`Summary`），否则 orval 会合并它们导致类型丢失。命名规范：`{父类前缀}{内部类名}`（如 `UserPermGroupSection`）
 - 确保 `application.yml` 配置 `springdoc.default-produces-media-type: application/json`，否则 orval 会生成 Blob 返回类型
+- **Controller 方法必须添加 `operationId`**：`@Operation(operationId = "listUsers", summary = "...")`，否则 orval 会用数字后缀区分同名方法（如 `getDetail2`、`list1`），命名规范：`{动词}{资源}`（如 `listRoles`、`getUserDetail`、`syncRolePermissions`）
 
 ## 关键开发经验
 
 ### MyBatis-Plus @TableLogic
 
 - BaseEntity 的 `isDeleted` 字段有 `@TableLogic` 注解
-- **删除操作使用 `mapper.delete()` 方法**，让 MyBatis-Plus 自动处理逻辑删除
-- **不要** `setIsDeleted(1)` + `updateById()`，这种方式可能不生效
+- **删除操作使用 `mapper.delete()` / `mapper.deleteById()` / `mapper.deleteBatchIds()` 方法**，让 MyBatis-Plus 自动处理逻辑删除
+- **不要** `setIsDeleted(1)` + `updateById()`，`updateById()` 会忽略 `@TableLogic` 字段的 SET
+- **不要** `LambdaUpdateWrapper.set(::getIsDeleted, 1)` + `mapper.update()`，应改用 `mapper.delete(LambdaQueryWrapper)` 方式
 - 查询时 MyBatis-Plus 已自动加 `is_deleted=0`，不需要手动加
 
 ### 权限通配符匹配
@@ -61,6 +63,19 @@ general_scaffold_spring/
 - shadcn 的 `Badge` 组件不支持 `forwardRef`，作为 Radix Tooltip trigger 时需用 `<span>` 包裹
 - 方法标签（GET/POST/PUT/DELETE）使用固定宽度保证对齐
 - 滚动条已全局自定义（`index.css`），`scrollbar-gutter: stable` 防止页面抖动
+
+### API 冗余清理原则
+
+- 当 `sync`（全量同步）接口存在时，`revoke`（批量撤销）接口是冗余的，可以删除
+- 删除后端接口后需同步删除关联的 DTO 类（如 `RevokePermissionsDTO`）
+- 同时检查 Service 接口和实现中是否有方法不再被任何 Controller 调用
+
+### operationId 变更后的前端对接
+
+- 后端添加/修改 `operationId` 后，用户重新生成 API，前端函数名会变化
+- 需要全局搜索旧函数名并替换为新函数名
+- 常见变化模式：`list` → `listRoles`、`getDetail` → `getRoleDetail`、`_delete` → `deleteRole`
+- 修改后运行 `npx tsc --noEmit` 验证无类型错误
 
 
 

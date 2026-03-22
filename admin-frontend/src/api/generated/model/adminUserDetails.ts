@@ -19,6 +19,6 @@ export interface AdminUserDetails {
   authorities?: GrantedAuthority[];
   enabled?: boolean;
   accountNonLocked?: boolean;
-  accountNonExpired?: boolean;
   credentialsNonExpired?: boolean;
+  accountNonExpired?: boolean;
 }

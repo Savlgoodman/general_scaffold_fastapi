@@ -7,8 +7,8 @@
  */
 import type {
   CreateAdminUserDTO,
-  DeleteBatch1Params,
-  List2Params,
+  DeleteUsersBatchParams,
+  ListUsersParams,
   RAdminUserVO,
   RPageAdminUserVO,
   RVoid,
@@ -27,7 +27,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * 获取单个用户详情
  * @summary 用户详情
  */
-const getDetail2 = (
+const getUserDetail = (
     id: number,
  options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
       return customInstance<RAdminUserVO>(
@@ -39,7 +39,7 @@ const getDetail2 = (
  * 更新用户信息
  * @summary 更新用户
  */
-const update1 = (
+const updateUser = (
     id: number,
     updateAdminUserDTO: BodyType<UpdateAdminUserDTO>,
  options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
@@ -54,7 +54,7 @@ const update1 = (
  * 删除单个用户
  * @summary 删除用户
  */
-const delete1 = (
+const deleteUser = (
     id: number,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
@@ -66,8 +66,8 @@ const delete1 = (
  * 分页获取用户列表
  * @summary 用户列表
  */
-const list2 = (
-    params?: List2Params,
+const listUsers = (
+    params?: ListUsersParams,
  options?: SecondParameter<typeof customInstance<RPageAdminUserVO>>,) => {
       return customInstance<RPageAdminUserVO>(
       {url: `/api/admin/admin-users`, method: 'GET',
@@ -79,7 +79,7 @@ const list2 = (
  * 创建新用户
  * @summary 创建用户
  */
-const create1 = (
+const createUser = (
     createAdminUserDTO: BodyType<CreateAdminUserDTO>,
  options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
       return customInstance<RAdminUserVO>(
@@ -93,8 +93,8 @@ const create1 = (
  * 批量删除用户
  * @summary 批量删除用户
  */
-const deleteBatch1 = (
-    params: DeleteBatch1Params,
+const deleteUsersBatch = (
+    params: DeleteUsersBatchParams,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
       {url: `/api/admin/admin-users`, method: 'DELETE',
@@ -102,10 +102,10 @@ const deleteBatch1 = (
     },
       options);
     }
-  return {getDetail2,update1,delete1,list2,create1,deleteBatch1}};
-export type GetDetail2Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['getDetail2']>>>
-export type Update1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['update1']>>>
-export type Delete1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['delete1']>>>
-export type List2Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['list2']>>>
-export type Create1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['create1']>>>
-export type DeleteBatch1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['deleteBatch1']>>>
+  return {getUserDetail,updateUser,deleteUser,listUsers,createUser,deleteUsersBatch}};
+export type GetUserDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['getUserDetail']>>>
+export type UpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['updateUser']>>>
+export type DeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['deleteUser']>>>
+export type ListUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['listUsers']>>>
+export type CreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['createUser']>>>
+export type DeleteUsersBatchResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['deleteUsersBatch']>>>

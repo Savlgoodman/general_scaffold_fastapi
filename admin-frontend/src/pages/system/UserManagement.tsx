@@ -75,7 +75,7 @@ export default function UserManagement() {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await usersApi.list2({ pageNum: current, pageSize, keyword: searchKeyword || undefined })
+      const res = await usersApi.listUsers({ pageNum: current, pageSize, keyword: searchKeyword || undefined })
       if (res.code === 200 && res.data) {
         setUsers(res.data.records || [])
         setTotal(res.data.total || 0)
@@ -98,7 +98,7 @@ export default function UserManagement() {
   const openEditDialog = async (id: number) => {
     setDialogTitle('编辑用户'); setEditingId(id); setFormLoading(true); setDialogOpen(true)
     try {
-      const res = await usersApi.getDetail2(id)
+      const res = await usersApi.getUserDetail(id)
       if (res.code === 200 && res.data) {
         setFormData({
           username: res.data.username || '', password: '',
@@ -130,11 +130,11 @@ export default function UserManagement() {
         if (formData.status !== undefined) updateData.status = formData.status
         if (formData.password) updateData.password = formData.password
 
-        const res = await usersApi.update1(editingId, updateData)
+        const res = await usersApi.updateUser(editingId, updateData)
         if (res.code === 200) { toast({ title: '更新用户成功' }); setDialogOpen(false); fetchUsers() }
         else toast({ title: '更新失败', description: res.message, variant: 'destructive' })
       } else {
-        const res = await usersApi.create1({
+        const res = await usersApi.createUser({
           username: formData.username, password: formData.password,
           nickname: formData.nickname || undefined, email: formData.email || undefined,
           phone: formData.phone || undefined, isSuperuser: formData.isSuperuser, status: formData.status,
@@ -153,7 +153,7 @@ export default function UserManagement() {
     if (!deletingId) return
     setDeletingLoading(true)
     try {
-      const res = await usersApi.delete1(deletingId)
+      const res = await usersApi.deleteUser(deletingId)
       if (res.code === 200) { toast({ title: '删除用户成功' }); setDeleteDialogOpen(false); fetchUsers() }
       else toast({ title: '删除失败', description: res.message, variant: 'destructive' })
     } catch {
@@ -168,7 +168,7 @@ export default function UserManagement() {
     setCurrentUserId(user.id); setCurrentUsername(user.username ?? ''); setRoleDialogOpen(true); setRoleLoading(true)
     try {
       const [rolesRes, userRolesRes] = await Promise.all([
-        rolesApi.list({ pageNum: 1, pageSize: 100 }),
+        rolesApi.listRoles({ pageNum: 1, pageSize: 100 }),
         permApi.getUserRoles(user.id),
       ])
       if (rolesRes.code === 200 && rolesRes.data) setAllRoles(rolesRes.data.records || [])
@@ -195,7 +195,7 @@ export default function UserManagement() {
     if (!currentUserId) return
     setRoleLoading(true)
     try {
-      const res = await permApi.assignUserRoles(currentUserId, { roleIds: Array.from(userRoleIds) })
+      const res = await permApi.syncUserRoles(currentUserId, { roleIds: Array.from(userRoleIds) })
       if (res.code === 200) { toast({ title: '角色分配成功' }); setRoleDialogOpen(false) }
       else toast({ title: '分配失败', description: res.message, variant: 'destructive' })
     } catch {
