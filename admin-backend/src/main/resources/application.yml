@@ -76,14 +76,4 @@ cors:
   allowed-origins: http://localhost:3000,http://localhost:5173
 
 logging:
-  level:
-    root: INFO
-    com.scaffold.admin: DEBUG
-    org.springframework.web: INFO
-    org.apache.catalina: INFO
-    com.zaxxer.hikari: INFO
-    com.baomidou: INFO
-    javax.management.remote.rmi: ERROR
-    sun.rmi: ERROR
-  file:
-    name: logs/admin-backend.log
+  config: classpath:logback-spring.xml
