@@ -11,8 +11,10 @@ import type {
   ListRolesParams,
   RPageRoleBaseVO,
   RRoleBaseVO,
+  RRoleMenuVO,
   RRolePermissionFullVO,
   RVoid,
+  SyncRoleMenusDTO,
   SyncRolePermissionsDTO,
   UpdateRoleDTO
 } from '../model';
@@ -92,6 +94,33 @@ const syncRolePermissions = (
       options);
     }
   /**
+ * 获取角色所有菜单及分配状态
+ * @summary 角色菜单视图
+ */
+const getRoleMenus = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RRoleMenuVO>>,) => {
+      return customInstance<RRoleMenuVO>(
+      {url: `/api/admin/roles/${id}/menus`, method: 'GET'
+    },
+      options);
+    }
+  /**
+ * 原子同步角色菜单（对比差异，批量增删）
+ * @summary 同步角色菜单
+ */
+const syncRoleMenus = (
+    id: number,
+    syncRoleMenusDTO: BodyType<SyncRoleMenusDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/roles/${id}/menus`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: syncRoleMenusDTO
+    },
+      options);
+    }
+  /**
  * 分页获取角色列表
  * @summary 角色列表
  */
@@ -131,12 +160,14 @@ const deleteRolesBatch = (
     },
       options);
     }
-  return {getRoleDetail,updateRole,deleteRole,getRolePermissions,syncRolePermissions,listRoles,createRole,deleteRolesBatch}};
+  return {getRoleDetail,updateRole,deleteRole,getRolePermissions,syncRolePermissions,getRoleMenus,syncRoleMenus,listRoles,createRole,deleteRolesBatch}};
 export type GetRoleDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getRoleDetail']>>>
 export type UpdateRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['updateRole']>>>
 export type DeleteRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteRole']>>>
 export type GetRolePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getRolePermissions']>>>
 export type SyncRolePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['syncRolePermissions']>>>
+export type GetRoleMenusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getRoleMenus']>>>
+export type SyncRoleMenusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['syncRoleMenus']>>>
 export type ListRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['listRoles']>>>
 export type CreateRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['createRole']>>>
 export type DeleteRolesBatchResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteRolesBatch']>>>

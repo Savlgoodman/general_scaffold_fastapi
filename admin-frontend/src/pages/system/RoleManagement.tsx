@@ -15,10 +15,11 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Search, Pencil, Trash2, RefreshCw, Shield } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, RefreshCw, Shield, Menu } from 'lucide-react'
 import { getRoles } from '@/api/generated/roles/roles'
 import type { RoleBaseVO } from '@/api/generated/model'
 import RolePermissionDialog from './components/RolePermissionDialog'
+import RoleMenuDialog from './components/RoleMenuDialog'
 
 const rolesApi = getRoles()
 
@@ -53,6 +54,10 @@ export default function RoleManagement() {
   const [permDialogOpen, setPermDialogOpen] = useState(false)
   const [permRoleId, setPermRoleId] = useState<number | null>(null)
   const [permRoleName, setPermRoleName] = useState('')
+
+  const [menuDialogOpen, setMenuDialogOpen] = useState(false)
+  const [menuRoleId, setMenuRoleId] = useState<number | null>(null)
+  const [menuRoleName, setMenuRoleName] = useState('')
 
   const fetchRoles = useCallback(async () => {
     setLoading(true)
@@ -150,6 +155,12 @@ export default function RoleManagement() {
     setPermDialogOpen(true)
   }
 
+  const openMenuDialog = (role: RoleBaseVO) => {
+    setMenuRoleId(role.id ?? null)
+    setMenuRoleName(role.name ?? '')
+    setMenuDialogOpen(true)
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -211,6 +222,7 @@ export default function RoleManagement() {
                     <TableCell className="text-center py-3">
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" title="分配权限" onClick={() => openPermDialog(role)}><Shield className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="分配菜单" onClick={() => openMenuDialog(role)}><Menu className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => role.id && openEditDialog(role.id)}><Pencil className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setDeletingId(role.id ?? null); setDeleteDialogOpen(true) }}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                       </div>
@@ -285,6 +297,7 @@ export default function RoleManagement() {
       </Dialog>
 
       <RolePermissionDialog open={permDialogOpen} onOpenChange={setPermDialogOpen} roleId={permRoleId} roleName={permRoleName} onSaved={fetchRoles} />
+      <RoleMenuDialog open={menuDialogOpen} onOpenChange={setMenuDialogOpen} roleId={menuRoleId} roleName={menuRoleName} onSaved={fetchRoles} />
     </div>
   )
 }

@@ -6,11 +6,14 @@ import com.scaffold.admin.common.R;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
+import com.scaffold.admin.model.dto.SyncRoleMenusDTO;
 import com.scaffold.admin.model.dto.SyncRolePermissionsDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.model.vo.RoleBaseVO;
+import com.scaffold.admin.model.vo.RoleMenuVO;
 import com.scaffold.admin.model.vo.RolePermissionFullVO;
+import com.scaffold.admin.service.MenuService;
 import com.scaffold.admin.service.RBACService;
 import com.scaffold.admin.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +32,7 @@ public class RoleController {
 
     private final RoleService roleService;
     private final RBACService rbacService;
+    private final MenuService menuService;
     private final AdminRoleMapper roleMapper;
 
     @GetMapping
@@ -135,6 +139,22 @@ public class RoleController {
         @RequestBody @Valid SyncRolePermissionsDTO dto
     ) {
         rbacService.syncRolePermissions(id, dto);
+        return R.ok();
+    }
+
+    @GetMapping("/{id:\\d+}/menus")
+    @Operation(operationId = "getRoleMenus", summary = "角色菜单视图", description = "获取角色所有菜单及分配状态")
+    public R<RoleMenuVO> getMenus(@PathVariable("id") Long id) {
+        return R.ok(menuService.getRoleMenus(id));
+    }
+
+    @PutMapping("/{id:\\d+}/menus")
+    @Operation(operationId = "syncRoleMenus", summary = "同步角色菜单", description = "原子同步角色菜单（对比差异，批量增删）")
+    public R<Void> syncMenus(
+        @PathVariable("id") Long id,
+        @RequestBody @Valid SyncRoleMenusDTO dto
+    ) {
+        menuService.syncRoleMenus(id, dto.getMenuIds());
         return R.ok();
     }
 

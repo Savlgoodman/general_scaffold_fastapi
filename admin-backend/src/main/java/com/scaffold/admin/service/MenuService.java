@@ -4,6 +4,7 @@ import com.scaffold.admin.model.dto.CreateMenuDTO;
 import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.vo.MenuVO;
+import com.scaffold.admin.model.vo.RoleMenuVO;
 
 import java.util.List;
 
@@ -22,4 +23,8 @@ public interface MenuService {
     void deleteMenu(Long id);
 
     void sortMenus(List<SortMenuDTO.SortMenuDTOItem> items);
+
+    RoleMenuVO getRoleMenus(Long roleId);
+
+    void syncRoleMenus(Long roleId, List<Long> menuIds);
 }

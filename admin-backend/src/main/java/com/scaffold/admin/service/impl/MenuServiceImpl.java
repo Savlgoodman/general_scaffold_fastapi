@@ -13,6 +13,9 @@ import com.scaffold.admin.model.entity.AdminMenu;
 import com.scaffold.admin.model.entity.AdminRoleMenu;
 import com.scaffold.admin.model.entity.AdminUserRole;
 import com.scaffold.admin.model.vo.MenuVO;
+import com.scaffold.admin.model.vo.RoleMenuVO;
+import com.scaffold.admin.mapper.AdminRoleMapper;
+import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.service.MenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -29,6 +32,7 @@ public class MenuServiceImpl implements MenuService {
     private final AdminMenuMapper menuMapper;
     private final AdminUserRoleMapper userRoleMapper;
     private final AdminRoleMenuMapper roleMenuMapper;
+    private final AdminRoleMapper roleMapper;
 
     @Override
     public List<MenuVO> getMenuTree() {
@@ -145,6 +149,148 @@ public class MenuServiceImpl implements MenuService {
             menu.setId(item.getId());
             menu.setSort(item.getSort());
             menuMapper.updateById(menu);
+        }
+    }
+
+    @Override
+    public RoleMenuVO getRoleMenus(Long roleId) {
+        AdminRole role = roleMapper.selectById(roleId);
+        if (role == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "角色不存在");
+        }
+
+        // 查该角色已分配的菜单ID
+        List<AdminRoleMenu> roleMenus = roleMenuMapper.selectList(
+                new LambdaQueryWrapper<AdminRoleMenu>()
+                        .eq(AdminRoleMenu::getRoleId, roleId)
+        );
+        Set<Long> assignedIds = roleMenus.stream()
+                .map(AdminRoleMenu::getMenuId)
+                .collect(Collectors.toSet());
+
+        // 查全量菜单树
+        List<AdminMenu> allMenus = menuMapper.selectList(
+                new LambdaQueryWrapper<AdminMenu>()
+                        .orderByAsc(AdminMenu::getSort)
+        );
+
+        // 按 parentId 分组
+        Map<Long, List<AdminMenu>> childrenMap = allMenus.stream()
+                .filter(m -> m.getParentId() != null && m.getParentId() != 0)
+                .collect(Collectors.groupingBy(AdminMenu::getParentId));
+
+        List<AdminMenu> topMenus = allMenus.stream()
+                .filter(m -> m.getParentId() == null || m.getParentId() == 0)
+                .toList();
+
+        // 构建分组
+        List<RoleMenuVO.RoleMenuVOGroup> groups = new ArrayList<>();
+        int totalMenus = 0;
+        int assignedCount = 0;
+
+        for (AdminMenu top : topMenus) {
+            RoleMenuVO.RoleMenuVOGroup group = new RoleMenuVO.RoleMenuVOGroup();
+            group.setId(top.getId());
+            group.setName(top.getName());
+            group.setPath(top.getPath());
+            group.setIcon(top.getIcon());
+            group.setType(top.getType());
+            group.setAssigned(assignedIds.contains(top.getId()));
+
+            totalMenus++;
+            if (group.isAssigned()) assignedCount++;
+
+            List<AdminMenu> children = childrenMap.getOrDefault(top.getId(), Collections.emptyList());
+            boolean dirAssigned = "directory".equals(top.getType()) && group.isAssigned();
+
+            List<RoleMenuVO.RoleMenuVOItem> items = new ArrayList<>();
+            int childAssigned = 0;
+            for (AdminMenu child : children) {
+                RoleMenuVO.RoleMenuVOItem item = new RoleMenuVO.RoleMenuVOItem();
+                item.setId(child.getId());
+                item.setName(child.getName());
+                item.setPath(child.getPath());
+                item.setIcon(child.getIcon());
+                item.setType(child.getType());
+                item.setAssigned(assignedIds.contains(child.getId()) || dirAssigned);
+                item.setCoveredByDirectory(dirAssigned);
+                items.add(item);
+
+                totalMenus++;
+                if (item.isAssigned()) {
+                    assignedCount++;
+                    childAssigned++;
+                }
+            }
+            group.setChildren(items);
+            group.setTotalCount(children.size());
+            group.setAssignedCount(childAssigned);
+
+            groups.add(group);
+        }
+
+        RoleMenuVO.RoleMenuVOSummary summary = new RoleMenuVO.RoleMenuVOSummary();
+        summary.setTotalMenus(totalMenus);
+        summary.setAssignedCount(assignedCount);
+
+        RoleMenuVO vo = new RoleMenuVO();
+        vo.setRoleId(roleId);
+        vo.setRoleName(role.getName());
+        vo.setGroups(groups);
+        vo.setSummary(summary);
+        return vo;
+    }
+
+    @Override
+    @Transactional
+    public void syncRoleMenus(Long roleId, List<Long> menuIds) {
+        // 目录覆盖：如果选中了 directory，自动加入其所有子菜单
+        Set<Long> expandedIds = new HashSet<>(menuIds);
+        if (!menuIds.isEmpty()) {
+            List<AdminMenu> directories = menuMapper.selectList(
+                    new LambdaQueryWrapper<AdminMenu>()
+                            .in(AdminMenu::getId, menuIds)
+                            .eq(AdminMenu::getType, "directory")
+            );
+            for (AdminMenu dir : directories) {
+                List<AdminMenu> children = menuMapper.selectList(
+                        new LambdaQueryWrapper<AdminMenu>()
+                                .eq(AdminMenu::getParentId, dir.getId())
+                );
+                for (AdminMenu child : children) {
+                    expandedIds.add(child.getId());
+                }
+            }
+        }
+
+        // 查当前已分配的菜单
+        List<AdminRoleMenu> current = roleMenuMapper.selectList(
+                new LambdaQueryWrapper<AdminRoleMenu>()
+                        .eq(AdminRoleMenu::getRoleId, roleId)
+        );
+        Set<Long> currentIds = current.stream()
+                .map(AdminRoleMenu::getMenuId)
+                .collect(Collectors.toSet());
+
+        // 需新增的
+        Set<Long> toAdd = new HashSet<>(expandedIds);
+        toAdd.removeAll(currentIds);
+        for (Long menuId : toAdd) {
+            AdminRoleMenu rm = new AdminRoleMenu();
+            rm.setRoleId(roleId);
+            rm.setMenuId(menuId);
+            roleMenuMapper.insert(rm);
+        }
+
+        // 需删除的
+        Set<Long> toRemove = new HashSet<>(currentIds);
+        toRemove.removeAll(expandedIds);
+        if (!toRemove.isEmpty()) {
+            roleMenuMapper.delete(
+                    new LambdaQueryWrapper<AdminRoleMenu>()
+                            .eq(AdminRoleMenu::getRoleId, roleId)
+                            .in(AdminRoleMenu::getMenuId, toRemove)
+            );
         }
     }
 
