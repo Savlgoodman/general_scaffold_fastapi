@@ -111,6 +111,25 @@ export const appRoutes: RouteConfig[] = [
 - 删除后端接口后需同步删除关联的 DTO 类（如 `RevokePermissionsDTO`）
 - 同时检查 Service 接口和实现中是否有方法不再被任何 Controller 调用
 
+### 操作审计日志
+
+- 后端所有 **CUD（增删改）** 类 Service 方法必须标注 `@OperationLog` 注解
+- 新增接口时，判断该操作是否属于需要审计的业务类型（用户/角色/菜单/权限等管理操作），按需添加注解
+- 纯查询接口（GET/列表/详情）不需要标注
+
+```java
+// 示例
+@OperationLog(module = "用户管理", type = OperationType.CREATE)
+public AdminUser createUser(CreateAdminUserDTO dto) { ... }
+
+@OperationLog(module = "角色管理", type = OperationType.DELETE, description = "批量删除")
+public void deleteRoles(List<Long> ids) { ... }
+```
+
+- `module`：业务模块名（中文），如 "用户管理"、"角色管理"、"菜单管理"、"权限管理"
+- `type`：`OperationType.CREATE` / `UPDATE` / `DELETE`
+- `description`：可选补充说明，如 "批量删除"、"同步角色菜单"
+
 ### operationId 变更后的前端对接
 
 - 后端添加/修改 `operationId` 后，用户重新生成 API，前端函数名会变化
