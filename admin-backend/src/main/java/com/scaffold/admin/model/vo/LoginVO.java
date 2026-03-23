@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,4 +27,7 @@ public class LoginVO {
 
     @Schema(description = "用户信息")
     private UserVO user;
+
+    @Schema(description = "用户可见菜单树")
+    private List<MenuVO> menus;
 }

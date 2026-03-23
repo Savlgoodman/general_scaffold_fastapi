@@ -14,9 +14,11 @@ import com.scaffold.admin.model.entity.AdminLoginLog;
 import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
+import com.scaffold.admin.model.vo.MenuVO;
 import com.scaffold.admin.model.vo.UserVO;
 import com.scaffold.admin.security.JwtTokenProvider;
 import com.scaffold.admin.service.AuthService;
+import com.scaffold.admin.service.MenuService;
 import com.scaffold.admin.util.AuthCaptchaUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
     private final HttpServletRequest httpServletRequest;
+    private final MenuService menuService;
 
     @Override
     public CaptchaVO generateCaptcha() {
@@ -367,6 +371,15 @@ public class AuthServiceImpl implements AuthService {
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         vo.setUser(userVO);
+
+        // 查询用户可见菜单树
+        List<MenuVO> menus;
+        if (user.getIsSuperuser() != null && user.getIsSuperuser() == 1) {
+            menus = menuService.getMenuTree();
+        } else {
+            menus = menuService.getUserMenuTree(user.getId());
+        }
+        vo.setMenus(menus);
 
         return vo;
     }
