@@ -33,7 +33,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 // icon 字符串 → lucide-react 组件映射
@@ -62,13 +62,22 @@ function getIcon(iconName?: string): LucideIcon {
 
 function AppSidebar() {
   const location = useLocation()
+  const { state } = useSidebar()
+  const collapsed = state === "collapsed"
   const { menus, user, devMode } = useAuthStore()
   const isSuperuser = user?.isSuperuser === 1
   const showDevMode = isSuperuser && devMode
 
+  // 从菜单树中提取所有叶子菜单（扁���化），收起时使用
+  const flatMenuItems = menus.flatMap((item) =>
+    item.type === "directory" && item.children?.length
+      ? item.children
+      : [item]
+  )
+
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="!p-0 px-2 h-16 shrink-0 justify-center border-b border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
@@ -85,10 +94,9 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarSeparator />
       <SidebarContent>
         {showDevMode ? (
-          /* 开发者模式：全部前端路由扁平展示 */
+          /* 开发者模式 */
           <SidebarGroup>
             <SidebarGroupLabel>
               <Settings className="size-4" data-icon="inline-start" />
@@ -116,8 +124,33 @@ function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+        ) : collapsed ? (
+          /* 收起模式：所有菜单扁平显示为图标 */
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {flatMenuItems.map((item) => {
+                  const Icon = getIcon(item.icon)
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname === item.path}
+                        tooltip={item.name}
+                      >
+                        <Link to={item.path ?? "/"}>
+                          <Icon className="size-4" data-icon="inline-start" />
+                          {item.name}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         ) : (
-          /* 普通模式：按后端返回的菜单树渲染 */
+          /* 展开模式：原来的 GroupLabel + Sub 样式 */
           menus.map((item) => {
             if (item.type === "directory" && item.children?.length) {
               const DirIcon = getIcon(item.icon)
