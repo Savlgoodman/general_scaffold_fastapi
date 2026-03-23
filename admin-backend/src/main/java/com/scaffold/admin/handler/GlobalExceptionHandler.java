@@ -98,7 +98,8 @@ public class GlobalExceptionHandler {
     // ==================== 异常日志入库 ====================
 
     private String determineLevel(Exception e) {
-        if (e instanceof OutOfMemoryError || e instanceof StackOverflowError) {
+        Throwable cause = e.getCause();
+        if (cause instanceof OutOfMemoryError || cause instanceof StackOverflowError) {
             return "CRITICAL";
         }
         return "ERROR";
