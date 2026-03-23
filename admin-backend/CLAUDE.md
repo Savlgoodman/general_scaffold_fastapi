@@ -106,6 +106,86 @@ public class AuthServiceImpl {
 
 **密码加密**：使用 `BCryptPasswordEncoder`。默认管理员账号密码为 `admin123`。
 
+### 异常处理规范
+
+**全局异常处理器统一兜底，Controller 禁止 try-catch**：
+
+- `GlobalExceptionHandler`（`@RestControllerAdvice`）统一处理所有异常并返回 `R<T>` 格式
+- **Controller 层禁止 try-catch**：Controller 只做 接收参数 → 调 Service → 返回结果，异常自动上抛给全局处理器
+- **Service 层抛 `BusinessException`**：业务校验失败时抛出，携带 `ResultCode` 和用户友好的 message
+
+```java
+// ✅ 正确：Service 抛 BusinessException
+throw new BusinessException(ResultCode.PARAM_ERROR, "用户名已存在");
+throw new BusinessException(ResultCode.NOT_FOUND, "角色不存在");
+
+// ❌ 错误：抛 IllegalArgumentException（message 可能含内部信息）
+throw new IllegalArgumentException("用户不存在: " + id);
+
+// ❌ 错误：Controller 手动 try-catch
+try {
+    roleService.createRole(dto);
+} catch (IllegalArgumentException e) {
+    return R.error(ResultCode.PARAM_ERROR, e.getMessage()); // 泄露内部信息
+}
+```
+
+**已覆盖的异常类型**：`BusinessException`、`MethodArgumentNotValidException`（@Valid 校验）、`BindException`、`MissingServletRequestParameterException`、`HttpMessageNotReadableException`（JSON 解析失败）、`HttpRequestMethodNotSupportedException`（405）、`NoHandlerFoundException`（404）、`IllegalArgumentException`（兜底，不透传 message）、`Exception`（兜底，返回固定文案）
+
+**安全原则**：异常 message **永远不直接透传**给前端。`BusinessException` 的 message 是开发者主动编写的安全文案；其他异常一律返回通用错误提示。
+
+### 安全白名单
+
+**单一数据源：`SecurityConstants.PUBLIC_PATHS`**
+
+所有不需要认证的公开路径统一定义在 `common/SecurityConstants.java` 中。`SecurityConfig`（Spring Security permitAll）和 `PermissionAuthorizationFilter`（权限跳过）共用此数组，禁止各自维护。
+
+```java
+// ✅ 正确：引用共享常量
+.requestMatchers(SecurityConstants.PUBLIC_PATHS).permitAll()
+
+// ❌ 错误：在过滤器中重复定义白名单
+private static final Set<String> EXCLUDE_PATHS = Set.of("/health", ...);
+```
+
+### 获取当前用户
+
+**统一使用 `SecurityUtils` 工具类**（`util/SecurityUtils.java`）：
+
+```java
+// 获取当前用户详情
+AdminUserDetails user = SecurityUtils.getCurrentUser();
+
+// 获取当前用户ID（最常用）
+Long userId = SecurityUtils.getCurrentUserId();
+
+// 判断是否为超级管理员
+boolean isSuperuser = SecurityUtils.isSuperuser();
+```
+
+**禁止**：
+- 直接写 `SecurityContextHolder.getContext().getAuthentication().getPrincipal()` 硬取 + 强转
+- 不同 Controller 各用各的方式获取用户
+
+### JWT Token 处理
+
+- `JwtTokenProvider.verifyToken(token)` 返回 `DecodedJWT`，后续通过 `getUserIdFromJwt(jwt)` / `isAccessToken(jwt)` 等重载方法提取信息
+- **同一次请求只调用一次 `verifyToken()`**，复用 `DecodedJWT` 对象，禁止多次验证同一 token
+
+### 日志规范
+
+- 日志配置在 `logback-spring.xml`，按 dev/prod profile 区分
+- dev 环境：彩色精简控制台 + 7 天滚动文件
+- prod 环境：异步写入 + 30 天滚动
+- 项目代码日志级别为 `INFO`，需要调试时临时改为 `DEBUG`
+- Spring Security 框架日志级别为 `WARN`，避免每次请求输出过滤器链日志
+
+### 错误信息安全
+
+- `server.error.include-stacktrace: never` — 禁止 Spring Boot `/error` 端点返回栈信息
+- `server.error.include-message: never` — 禁止返回异常 message
+- 以上配置仅影响 HTTP 响应体，**不影响** `log.error("异常", e)` 的控制台/文件日志输出
+
 ### 响应状态码
 
 `ResultCode` 枚举：SUCCESS(200)、PARAM_ERROR(400)、UNAUTHORIZED(401)、FORBIDDEN(403)、NOT_FOUND(404)、ACCOUNT_LOCKED(423)、INTERNAL_SERVER_ERROR(500)。
