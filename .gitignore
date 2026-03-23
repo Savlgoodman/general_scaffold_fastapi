@@ -1,3 +1,6 @@
+# Claude Code
+.claude/settings.local.json
+
 # Java / Spring Boot
 admin-backend/target/
 *.class
