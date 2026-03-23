@@ -8,6 +8,8 @@ import ApiLogPage from "@/pages/logs/ApiLogPage"
 import LoginLogPage from "@/pages/logs/LoginLogPage"
 import OperationLogPage from "@/pages/logs/OperationLogPage"
 import ErrorLogPage from "@/pages/logs/ErrorLogPage"
+import NoticeManagement from "@/pages/system/NoticeManagement"
+import SystemMonitor from "@/pages/system/SystemMonitor"
 
 export interface RouteConfig {
   path: string
@@ -31,4 +33,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/logs/login", title: "登录日志", icon: "LogIn", element: <LoginLogPage /> },
   { path: "/logs/operation", title: "操作日志", icon: "FileText", element: <OperationLogPage /> },
   { path: "/logs/error", title: "异常日志", icon: "AlertCircle", element: <ErrorLogPage /> },
+  { path: "/system/notice", title: "通知公告", icon: "Bell", element: <NoticeManagement /> },
+  { path: "/system/monitor", title: "系统监控", icon: "Activity", element: <SystemMonitor /> },
 ]
