@@ -103,7 +103,7 @@ export default function ApiLogPage() {
                   <TableHead className="w-20 text-center">方法</TableHead>
                   <TableHead className="text-center">路径</TableHead>
                   <TableHead className="text-center">用户</TableHead>
-                  <TableHead className="w-20 text-center">状��码</TableHead>
+                  <TableHead className="w-20 text-center">状态码</TableHead>
                   <TableHead className="w-20 text-center">耗时</TableHead>
                   <TableHead className="text-center">IP</TableHead>
                   <TableHead className="w-40 text-center">时间</TableHead>
