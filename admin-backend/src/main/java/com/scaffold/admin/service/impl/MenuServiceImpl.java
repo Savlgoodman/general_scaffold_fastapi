@@ -62,7 +62,7 @@ public class MenuServiceImpl implements MenuService {
                 .map(AdminUserRole::getRoleId)
                 .toList();
 
-        // 2. 查角色关联��菜单ID列表
+        // 2. 查角色关联的菜单ID列表
         List<AdminRoleMenu> roleMenus = roleMenuMapper.selectList(
                 new LambdaQueryWrapper<AdminRoleMenu>()
                         .in(AdminRoleMenu::getRoleId, roleIds)

@@ -35,7 +35,7 @@ public interface RBACService {
     RolePermissionFullVO getRolePermissionsFull(Long roleId);
 
     /**
-     * 原子同步角色权限（���比差异，批量增删改）
+     * 原子同步角色权限（比差异，批量增删改）
      */
     void syncRolePermissions(Long roleId, SyncRolePermissionsDTO dto);
 

@@ -741,7 +741,7 @@ public class RBACServiceImpl implements RBACService {
         return "GRANT".equals(matchedRolePerms.get(0).getEffect());
     }
 
-    // ==================== 内部辅助��� ====================
+    // ==================== 内部辅助 ====================
 
     private static class RolePermissionInfo {
         Long roleId;
