@@ -68,7 +68,7 @@ function AppSidebar() {
   const isSuperuser = user?.isSuperuser === 1
   const showDevMode = isSuperuser && devMode
 
-  // 从菜单树中提取所有叶子菜单（扁���化），收起时使用
+  // 从菜单树中提取所有叶子菜单（扁平化），收起时使用
   const flatMenuItems = menus.flatMap((item) =>
     item.type === "directory" && item.children?.length
       ? item.children

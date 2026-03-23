@@ -277,7 +277,7 @@ export default function MenuManagement() {
 
   const totalMenus = menuTree.reduce((sum, m) => sum + 1 + (m.children?.length || 0), 0)
 
-  /* ─── 渲染 ���── */
+  /* ─── 渲染 ── */
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 顶部 */}
