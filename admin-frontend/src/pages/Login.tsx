@@ -14,7 +14,7 @@ import { Shield } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { setTokens, setUser, isAuthenticated } = useAuthStore()
+  const { setLoginData, isAuthenticated } = useAuthStore()
   const [captcha, setCaptcha] = useState<CaptchaVO>({})
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -71,9 +71,13 @@ export default function Login() {
         })
 
       if (res.code === 200 && res.data) {
-        const loginData = res.data as { accessToken: string; refreshToken: string; user: unknown }
-        setTokens(loginData.accessToken, loginData.refreshToken)
-        setUser(loginData.user as never)
+        const d = res.data
+        setLoginData(
+          d.accessToken!,
+          d.refreshToken!,
+          d.user!,
+          d.menus ?? [],
+        )
         navigate('/')
       } else {
         setError(res.message || '登录失败')

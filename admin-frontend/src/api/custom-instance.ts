@@ -5,6 +5,7 @@
  */
 import Axios, { AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/auth'
+import { toast } from '@/hooks/use-toast'
 
 export const AXIOS_INSTANCE = Axios.create({
   baseURL: '',
@@ -26,18 +27,113 @@ AXIOS_INSTANCE.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// 响应拦截器：401/403 自动退出
+// Refresh token 状态管理
+let isRefreshing = false
+let pendingRequests: Array<{
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}> = []
+
+function onRefreshed(newToken: string) {
+  pendingRequests.forEach(({ resolve }) => resolve(newToken))
+  pendingRequests = []
+}
+
+function onRefreshFailed(error: unknown) {
+  pendingRequests.forEach(({ reject }) => reject(error))
+  pendingRequests = []
+}
+
+function handleLogoutWithToast() {
+  useAuthStore.getState().logout()
+  toast({
+    title: '登录失效！',
+    description: '请重新登录',
+    variant: 'destructive',
+  })
+  window.location.href = '/login'
+}
+
+// 响应拦截器：401 自动刷新 token
 AXIOS_INSTANCE.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      const data = error.response.data as { code?: number; message?: string } | undefined
-      if (error.response.status === 401 || data?.message === '未登录') {
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
-      }
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    // 非 401 错误直接抛出
+    if (error.response?.status !== 401) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+
+    // 刷新接口本身 401，直接退出
+    if (originalRequest.url === '/api/admin/auth/refresh') {
+      handleLogoutWithToast()
+      return Promise.reject(error)
+    }
+
+    // 已经重试过，直接退出
+    if (originalRequest._retry) {
+      handleLogoutWithToast()
+      return Promise.reject(error)
+    }
+
+    const { refreshToken: storedRefreshToken } = useAuthStore.getState()
+
+    // 没有 refresh token，直接退出
+    if (!storedRefreshToken) {
+      handleLogoutWithToast()
+      return Promise.reject(error)
+    }
+
+    // 如果正在刷新，排队等待
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        pendingRequests.push({
+          resolve: (newToken: string) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`
+            originalRequest._retry = true
+            resolve(AXIOS_INSTANCE(originalRequest))
+          },
+          reject,
+        })
+      })
+    }
+
+    // 开始刷新
+    isRefreshing = true
+    originalRequest._retry = true
+
+    try {
+      const res = await AXIOS_INSTANCE.post('/api/admin/auth/refresh', {
+        refreshToken: storedRefreshToken,
+      })
+
+      const data = res.data
+      if (data.code === 200 && data.data) {
+        const { accessToken, refreshToken, user, menus } = data.data
+        useAuthStore.getState().setLoginData(
+          accessToken,
+          refreshToken,
+          user,
+          menus ?? [],
+        )
+
+        // 重试原请求
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`
+        onRefreshed(accessToken)
+        return AXIOS_INSTANCE(originalRequest)
+      } else {
+        onRefreshFailed(error)
+        handleLogoutWithToast()
+        return Promise.reject(error)
+      }
+    } catch (refreshError) {
+      onRefreshFailed(refreshError)
+      handleLogoutWithToast()
+      return Promise.reject(refreshError)
+    } finally {
+      isRefreshing = false
+    }
   },
 )
 

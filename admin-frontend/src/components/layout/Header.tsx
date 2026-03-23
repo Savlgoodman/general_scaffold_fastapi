@@ -1,7 +1,9 @@
-import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut } from "lucide-react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
 import { useAuthStore } from "@/store/auth"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 import {
   Avatar,
   AvatarFallback,
@@ -21,7 +23,8 @@ import { Separator } from "@/components/ui/separator"
 
 function Header() {
   const { theme, setTheme } = useThemeStore()
-  const { logout, user } = useAuthStore()
+  const { logout, user, devMode, toggleDevMode } = useAuthStore()
+  const isSuperuser = user?.isSuperuser === 1
 
   const themeIcon = {
     light: Sun,
@@ -56,6 +59,24 @@ function Header() {
       </div>
       <div className="flex items-center">
         <div className="flex items-center gap-1">
+          {/* Dev Mode Toggle (superuser only) */}
+          {isSuperuser && (
+            <div className="flex items-center gap-2 mr-2">
+              <div className="flex items-center gap-1.5">
+                <Code className="size-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground hidden sm:inline">开发者模式</span>
+              </div>
+              <Switch
+                checked={devMode}
+                onCheckedChange={toggleDevMode}
+                aria-label="开发者模式"
+              />
+              {devMode && (
+                <span><Badge variant="secondary" className="text-[10px] px-1.5 py-0">DEV</Badge></span>
+              )}
+            </div>
+          )}
+
           {/* Theme Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -10,11 +10,20 @@
  * 用户信息
  */
 export interface UserVO {
+  /** 用户ID */
   id?: number;
+  /** 用户名 */
   username?: string;
+  /** 邮箱 */
   email?: string;
+  /** 昵称 */
   nickname?: string;
+  /** 头像 */
   avatar?: string;
+  /** 状态：1-正常 0-禁用 */
   status?: number;
+  /** 是否超级管理员：1-是 0-否 */
+  isSuperuser?: number;
+  /** 创建时间 */
   createTime?: string;
 }

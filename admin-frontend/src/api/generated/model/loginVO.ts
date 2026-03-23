@@ -5,6 +5,7 @@
  * 后台管理系统后端 API 文档，前端可通过 OpenAPI Schema 自动生成接口调用代码
  * OpenAPI spec version: 1.0.0
  */
+import type { MenuVO } from './menuVO';
 import type { UserVO } from './userVO';
 
 /**
@@ -20,4 +21,6 @@ export interface LoginVO {
   /** Access Token剩余有效期（秒） */
   expiresIn?: number;
   user?: UserVO;
+  /** 用户可见菜单树 */
+  menus?: MenuVO[];
 }

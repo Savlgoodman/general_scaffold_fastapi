@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
+import { type LucideIcon } from "lucide-react"
 import {
   LayoutDashboard,
   Users,
@@ -9,13 +10,19 @@ import {
   LogIn,
   AlertCircle,
   Settings,
+  Globe,
+  Home,
+  Database,
   Bell,
+  BookOpen,
+  Folder,
 } from "lucide-react"
+import { useAuthStore } from "@/store/auth"
+import { appRoutes } from "@/routes"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -23,39 +30,41 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 
-const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/",
-  },
-  {
-    title: "系统管理",
-    icon: Settings,
-    submenu: [
-      { title: "用户管理", icon: Users, path: "/system/user" },
-      { title: "角色管理", icon: Shield, path: "/system/role" },
-      { title: "菜单管理", icon: Menu, path: "/system/menu" },
-      { title: "权限管理", icon: Key, path: "/system/permission" },
-    ],
-  },
-  {
-    title: "日志监控",
-    icon: FileText,
-    submenu: [
-      { title: "API日志", icon: LogIn, path: "/logs/api" },
-      { title: "登录日志", icon: Bell, path: "/logs/login" },
-      { title: "操作日志", icon: FileText, path: "/logs/operation" },
-      { title: "异常日志", icon: AlertCircle, path: "/logs/error" },
-    ],
-  },
-]
+// icon 字符串 → lucide-react 组件映射
+const iconMap: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Users,
+  Shield,
+  Menu,
+  Key,
+  FileText,
+  LogIn,
+  AlertCircle,
+  Settings,
+  Globe,
+  Home,
+  Database,
+  Bell,
+  BookOpen,
+  Folder,
+}
+
+function getIcon(iconName?: string): LucideIcon {
+  if (!iconName) return Folder
+  return iconMap[iconName] ?? Folder
+}
 
 function AppSidebar() {
   const location = useLocation()
+  const { menus, user, devMode } = useAuthStore()
+  const isSuperuser = user?.isSuperuser === 1
+  const showDevMode = isSuperuser && devMode
 
   return (
     <Sidebar collapsible="icon">
@@ -78,67 +87,99 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>
-        {menuItems.map((item, index) =>
-          item.submenu ? (
-            <SidebarGroup key={index}>
-              <SidebarGroupLabel>
-                <item.icon className="size-4" data-icon="inline-start" />
-                {item.title}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {item.submenu.map((subItem, subIndex) => (
-                    <SidebarMenuItem key={subIndex}>
+        {showDevMode ? (
+          /* 开发者模式：全部前端路由扁平展示 */
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              <Settings className="size-4" data-icon="inline-start" />
+              全部页面
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {appRoutes.map((route) => {
+                  const Icon = getIcon(route.icon)
+                  return (
+                    <SidebarMenuItem key={route.path}>
                       <SidebarMenuButton
                         asChild
-                        isActive={location.pathname === subItem.path}
-                        tooltip={subItem.title}
+                        isActive={location.pathname === route.path}
+                        tooltip={route.title}
                       >
-                        <Link to={subItem.path}>
-                          <subItem.icon
-                            className="size-4"
-                            data-icon="inline-start"
-                          />
-                          {subItem.title}
+                        <Link to={route.path}>
+                          <Icon className="size-4" data-icon="inline-start" />
+                          {route.title}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ) : (
-            <SidebarGroup key={index}>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.path}
-                      tooltip={item.title}
-                    >
-                      <Link to={item.path!}>
-                        <item.icon className="size-4" data-icon="inline-start" />
-                        {item.title}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          /* 普通模式：按后端返回的菜单树渲染 */
+          menus.map((item) => {
+            if (item.type === "directory" && item.children?.length) {
+              const DirIcon = getIcon(item.icon)
+              return (
+                <SidebarGroup key={item.id}>
+                  <SidebarGroupLabel>
+                    <DirIcon className="size-4" data-icon="inline-start" />
+                    {item.name}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuSub>
+                        {item.children.map((child) => {
+                          const ChildIcon = getIcon(child.icon)
+                          return (
+                            <SidebarMenuSubItem key={child.id}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={location.pathname === child.path}
+                              >
+                                <Link to={child.path ?? "/"}>
+                                  <ChildIcon
+                                    className="size-4"
+                                    data-icon="inline-start"
+                                  />
+                                  {child.name}
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )
+                        })}
+                      </SidebarMenuSub>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              )
+            }
+
+            const ItemIcon = getIcon(item.icon)
+            return (
+              <SidebarGroup key={item.id}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname === item.path}
+                        tooltip={item.name}
+                      >
+                        <Link to={item.path ?? "/"}>
+                          <ItemIcon className="size-4" data-icon="inline-start" />
+                          {item.name}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )
+          })
         )}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="设置">
-              <Settings className="size-4" data-icon="inline-start" />
-              设置
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
