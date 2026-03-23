@@ -54,6 +54,8 @@ export * from './rString';
 export * from './rUserPermissionOverviewVO';
 export * from './rVoid';
 export * from './rVoidData';
+export * from './sortMenuDTO';
+export * from './sortMenuDTOItem';
 export * from './summary';
 export * from './syncRolePermissionsDTO';
 export * from './syncUserOverridesDTO';

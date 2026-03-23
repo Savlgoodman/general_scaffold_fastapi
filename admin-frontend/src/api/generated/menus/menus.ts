@@ -10,6 +10,7 @@ import type {
   RListMenuVO,
   RMenuVO,
   RVoid,
+  SortMenuDTO,
   UpdateMenuDTO
 } from '../model';
 
@@ -61,6 +62,20 @@ const deleteMenu = (
       options);
     }
   /**
+ * 批量更新菜单排序值
+ * @summary 批量排序菜单
+ */
+const sortMenus = (
+    sortMenuDTO: BodyType<SortMenuDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/menus/sort`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: sortMenuDTO
+    },
+      options);
+    }
+  /**
  * 创建新菜单
  * @summary 创建菜单
  */
@@ -98,10 +113,11 @@ const getMenuTree = (
     },
       options);
     }
-  return {getMenuDetail,updateMenu,deleteMenu,createMenu,getUserMenuTree,getMenuTree}};
+  return {getMenuDetail,updateMenu,deleteMenu,sortMenus,createMenu,getUserMenuTree,getMenuTree}};
 export type GetMenuDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['getMenuDetail']>>>
 export type UpdateMenuResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['updateMenu']>>>
 export type DeleteMenuResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['deleteMenu']>>>
+export type SortMenusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['sortMenus']>>>
 export type CreateMenuResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['createMenu']>>>
 export type GetUserMenuTreeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['getUserMenuTree']>>>
 export type GetMenuTreeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getMenus>['getMenuTree']>>>

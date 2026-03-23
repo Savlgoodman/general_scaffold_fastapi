@@ -2,6 +2,7 @@ package com.scaffold.admin.controller;
 
 import com.scaffold.admin.common.R;
 import com.scaffold.admin.model.dto.CreateMenuDTO;
+import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.vo.MenuVO;
 import com.scaffold.admin.service.MenuService;
@@ -61,6 +62,13 @@ public class MenuController {
     @Operation(operationId = "deleteMenu", summary = "删除菜单", description = "删除菜单及其子菜单")
     public R<Void> delete(@PathVariable("id") Long id) {
         menuService.deleteMenu(id);
+        return R.ok();
+    }
+
+    @PutMapping("/sort")
+    @Operation(operationId = "sortMenus", summary = "批量排序菜单", description = "批量更新菜单排序值")
+    public R<Void> sort(@RequestBody @Valid SortMenuDTO dto) {
+        menuService.sortMenus(dto.getItems());
         return R.ok();
     }
 }

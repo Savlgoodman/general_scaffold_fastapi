@@ -1,6 +1,7 @@
 package com.scaffold.admin.service;
 
 import com.scaffold.admin.model.dto.CreateMenuDTO;
+import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.vo.MenuVO;
 
@@ -19,4 +20,6 @@ public interface MenuService {
     void updateMenu(Long id, UpdateMenuDTO dto);
 
     void deleteMenu(Long id);
+
+    void sortMenus(List<SortMenuDTO.SortMenuDTOItem> items);
 }

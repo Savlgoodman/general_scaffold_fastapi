@@ -7,6 +7,7 @@ import com.scaffold.admin.mapper.AdminMenuMapper;
 import com.scaffold.admin.mapper.AdminRoleMenuMapper;
 import com.scaffold.admin.mapper.AdminUserRoleMapper;
 import com.scaffold.admin.model.dto.CreateMenuDTO;
+import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.entity.AdminMenu;
 import com.scaffold.admin.model.entity.AdminRoleMenu;
@@ -134,6 +135,17 @@ public class MenuServiceImpl implements MenuService {
         // 递归删除子菜单
         deleteChildren(id);
         menuMapper.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void sortMenus(List<SortMenuDTO.SortMenuDTOItem> items) {
+        for (SortMenuDTO.SortMenuDTOItem item : items) {
+            AdminMenu menu = new AdminMenu();
+            menu.setId(item.getId());
+            menu.setSort(item.getSort());
+            menuMapper.updateById(menu);
+        }
     }
 
     private void deleteChildren(Long parentId) {
