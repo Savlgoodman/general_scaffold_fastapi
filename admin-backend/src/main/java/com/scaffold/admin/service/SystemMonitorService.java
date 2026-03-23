@@ -56,10 +56,7 @@ public class SystemMonitorService {
 
         long[] prevTicks = processor.getSystemCpuLoadTicks();
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
-        double[] load = processor.getSystemCpuLoadBetweenTicks(prevTicks);
 
-        // load 数组: [USER, NICE, SYSTEM, IDLE, IOWAIT, IRQ, SOFTIRQ, STEAL]
-        // 但 getSystemCpuLoadBetweenTicks 返回的是百分比数组，需要用总 tick 差值
         long[] ticks = processor.getSystemCpuLoadTicks();
         long user = ticks[CentralProcessor.TickType.USER.getIndex()] - prevTicks[CentralProcessor.TickType.USER.getIndex()];
         long system = ticks[CentralProcessor.TickType.SYSTEM.getIndex()] - prevTicks[CentralProcessor.TickType.SYSTEM.getIndex()];
