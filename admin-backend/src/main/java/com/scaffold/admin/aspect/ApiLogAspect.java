@@ -60,6 +60,8 @@ public class ApiLogAspect {
         } finally {
             try {
                 long duration = System.currentTimeMillis() - startTime;
+                int status = result instanceof R<?> r ? r.getCode() : 0;
+                log.info("[API] {} {} {} {}ms", request.getMethod(), request.getRequestURI(), status, duration);
                 recordApiLog(request, joinPoint, result, duration);
             } catch (Exception e) {
                 log.error("记录API日志异常", e);
