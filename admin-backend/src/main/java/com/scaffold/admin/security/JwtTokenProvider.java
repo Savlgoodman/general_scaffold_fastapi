@@ -96,9 +96,13 @@ public class JwtTokenProvider {
      */
     public Long getUserIdFromToken(String token) {
         DecodedJWT jwt = verifyToken(token);
-        if (jwt == null) {
-            return null;
-        }
+        return jwt != null ? getUserIdFromJwt(jwt) : null;
+    }
+
+    /**
+     * 从已解析的 JWT 中获取用户ID
+     */
+    public Long getUserIdFromJwt(DecodedJWT jwt) {
         return jwt.getClaim(USER_ID_KEY).asLong();
     }
 
@@ -107,35 +111,37 @@ public class JwtTokenProvider {
      */
     public String getUsernameFromToken(String token) {
         DecodedJWT jwt = verifyToken(token);
-        if (jwt == null) {
-            return null;
-        }
-        return jwt.getClaim("username").asString();
+        return jwt != null ? jwt.getClaim("username").asString() : null;
     }
 
     /**
-     * 获取 Token 类型
+     * 从已解析的 JWT 中判断是否为 Access Token
      */
-    public String getTokenType(String token) {
-        DecodedJWT jwt = verifyToken(token);
-        if (jwt == null) {
-            return null;
-        }
-        return jwt.getClaim(TOKEN_TYPE_KEY).asString();
+    public boolean isAccessToken(DecodedJWT jwt) {
+        return ACCESS_TOKEN_TYPE.equals(jwt.getClaim(TOKEN_TYPE_KEY).asString());
     }
 
     /**
-     * 判断是否为 Access Token
+     * 判断 Token 字符串是否为 Access Token
      */
     public boolean isAccessToken(String token) {
-        return ACCESS_TOKEN_TYPE.equals(getTokenType(token));
+        DecodedJWT jwt = verifyToken(token);
+        return jwt != null && isAccessToken(jwt);
     }
 
     /**
-     * 判断是否为 Refresh Token
+     * 从已解析的 JWT 中判断是否为 Refresh Token
+     */
+    public boolean isRefreshToken(DecodedJWT jwt) {
+        return REFRESH_TOKEN_TYPE.equals(jwt.getClaim(TOKEN_TYPE_KEY).asString());
+    }
+
+    /**
+     * 判断 Token 字符串是否为 Refresh Token
      */
     public boolean isRefreshToken(String token) {
-        return REFRESH_TOKEN_TYPE.equals(getTokenType(token));
+        DecodedJWT jwt = verifyToken(token);
+        return jwt != null && isRefreshToken(jwt);
     }
 
     /**

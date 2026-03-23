@@ -1,5 +1,6 @@
 package com.scaffold.admin.security;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.scaffold.admin.service.AdminUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,24 +47,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                // 验证Token并获取用户ID
-                Long userId = jwtTokenProvider.getUserIdFromToken(token);
-                if (userId != null) {
-                    // 只验证Access Token
-                    if (jwtTokenProvider.isAccessToken(token)) {
-                        // 检查用户是否已认证
-                        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                            UserDetails userDetails = adminUserService.loadUserById(userId);
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(
-                                            userDetails,
-                                            null,
-                                            userDetails.getAuthorities()
-                                    );
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-                            log.debug("用户已认证: {}, URI: {}", userDetails.getUsername(), request.getRequestURI());
-                        }
+                // 一次性验证Token并提取所有信息
+                DecodedJWT jwt = jwtTokenProvider.verifyToken(token);
+                if (jwt != null && jwtTokenProvider.isAccessToken(jwt)) {
+                    Long userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+                    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UserDetails userDetails = adminUserService.loadUserById(userId);
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.debug("用户已认证: {}, URI: {}", userDetails.getUsername(), request.getRequestURI());
                     }
                 }
             }

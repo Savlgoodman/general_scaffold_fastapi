@@ -1,6 +1,7 @@
 package com.scaffold.admin.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.RedisKeys;
@@ -184,8 +185,9 @@ public class AuthServiceImpl implements AuthService {
     public LoginVO refreshToken(RefreshTokenDTO refreshTokenDTO) {
         String refreshToken = refreshTokenDTO.getRefreshToken();
 
-        // 验证Refresh Token
-        if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
+        // 一次性验证 Refresh Token
+        DecodedJWT jwt = jwtTokenProvider.verifyToken(refreshToken);
+        if (jwt == null || !jwtTokenProvider.isRefreshToken(jwt)) {
             throw new BusinessException(ResultCode.UNAUTHORIZED, "无效的Refresh Token");
         }
 
@@ -194,7 +196,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.UNAUTHORIZED, "Refresh Token已失效");
         }
 
-        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        Long userId = jwtTokenProvider.getUserIdFromJwt(jwt);
         if (userId == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED, "无效的Refresh Token");
         }
