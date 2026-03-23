@@ -3,6 +3,12 @@ package com.scaffold.admin.handler;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.common.R;
+import com.scaffold.admin.model.entity.AdminErrorLog;
+import com.scaffold.admin.service.LogWriteService;
+import com.scaffold.admin.util.IpUtils;
+import com.scaffold.admin.util.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -14,11 +20,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private static final int MAX_STACK_TRACE_LENGTH = 4000;
+    private static final int MAX_MESSAGE_LENGTH = 500;
+
+    private final LogWriteService logWriteService;
+    private final HttpServletRequest request;
 
     @ExceptionHandler(BusinessException.class)
     public R<Void> handleBusinessException(BusinessException e) {
@@ -76,6 +91,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e) {
         log.error("系统异常", e);
+        writeErrorLog(e, determineLevel(e));
         return R.error(ResultCode.INTERNAL_SERVER_ERROR, "系统内部错误，请稍后重试");
+    }
+
+    // ==================== 异常日志入库 ====================
+
+    private String determineLevel(Exception e) {
+        if (e instanceof OutOfMemoryError || e instanceof StackOverflowError) {
+            return "CRITICAL";
+        }
+        return "ERROR";
+    }
+
+    private void writeErrorLog(Exception e, String level) {
+        try {
+            AdminErrorLog errorLog = new AdminErrorLog();
+            errorLog.setLevel(level);
+            errorLog.setExceptionClass(e.getClass().getName());
+            errorLog.setExceptionMessage(truncate(e.getMessage(), MAX_MESSAGE_LENGTH));
+            errorLog.setStackTrace(truncate(getStackTrace(e), MAX_STACK_TRACE_LENGTH));
+            errorLog.setRequestPath(request.getRequestURI());
+            errorLog.setRequestMethod(request.getMethod());
+            errorLog.setRequestParams(request.getQueryString());
+            errorLog.setUserId(SecurityUtils.getCurrentUserId());
+            errorLog.setIp(IpUtils.getClientIp(request));
+            logWriteService.writeErrorLog(errorLog);
+        } catch (Exception ex) {
+            log.error("写入异常日志到数据库失败", ex);
+        }
+    }
+
+    private String getStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
+    }
+
+    private String truncate(String str, int maxLength) {
+        if (str == null) return null;
+        return str.length() > maxLength ? str.substring(0, maxLength) : str;
     }
 }
