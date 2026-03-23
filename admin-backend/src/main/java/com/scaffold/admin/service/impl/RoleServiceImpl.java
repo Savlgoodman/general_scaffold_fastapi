@@ -1,8 +1,10 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.scaffold.admin.annotation.OperationLog;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
+import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
@@ -55,6 +57,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @OperationLog(module = "角色管理", type = OperationType.CREATE)
     public AdminRole createRole(CreateRoleDTO dto) {
         if (isCodeExists(dto.getCode())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "角色编码已存在");
@@ -73,6 +76,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @OperationLog(module = "角色管理", type = OperationType.UPDATE)
     public AdminRole updateRole(Long id, UpdateRoleDTO dto) {
         AdminRole role = roleMapper.selectById(id);
         if (role == null) {
@@ -90,6 +94,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @OperationLog(module = "角色管理", type = OperationType.DELETE)
     public void deleteRole(Long id) {
         AdminRole role = roleMapper.selectById(id);
         if (role == null) {
@@ -100,6 +105,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @OperationLog(module = "角色管理", type = OperationType.DELETE, description = "批量删除")
     public void deleteRoles(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
         roleMapper.deleteBatchIds(ids);

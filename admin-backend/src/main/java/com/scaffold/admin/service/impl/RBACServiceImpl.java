@@ -1,7 +1,9 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.scaffold.admin.annotation.OperationLog;
 import com.scaffold.admin.mapper.*;
+import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.model.dto.SyncRolePermissionsDTO;
 import com.scaffold.admin.model.dto.SyncUserOverridesDTO;
 import com.scaffold.admin.model.entity.*;
@@ -108,6 +110,7 @@ public class RBACServiceImpl implements RBACService {
 
     @Override
     @Transactional
+    @OperationLog(module = "权限管理", type = OperationType.UPDATE, description = "同步用户角色")
     public void syncUserRoles(Long userId, List<Long> roleIds) {
         // 删除所有现有关联（@TableLogic 自动转为逻辑删除）
         userRoleMapper.delete(
@@ -234,6 +237,7 @@ public class RBACServiceImpl implements RBACService {
 
     @Override
     @Transactional
+    @OperationLog(module = "权限管理", type = OperationType.UPDATE, description = "同步角色权限")
     public void syncRolePermissions(Long roleId, SyncRolePermissionsDTO dto) {
         // 1. 查询当前状态
         List<AdminRolePermission> currentPerms = rolePermissionMapper.selectList(
@@ -561,6 +565,7 @@ public class RBACServiceImpl implements RBACService {
 
     @Override
     @Transactional
+    @OperationLog(module = "权限管理", type = OperationType.UPDATE, description = "同步用户权限覆盖")
     public void syncUserOverrides(Long userId, SyncUserOverridesDTO dto) {
         // 1. 查询当前覆盖
         List<AdminUserPermissionOverride> currentOverrides = overrideMapper.selectList(

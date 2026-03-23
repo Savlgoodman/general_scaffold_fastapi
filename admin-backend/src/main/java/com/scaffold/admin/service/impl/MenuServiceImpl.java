@@ -1,8 +1,10 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.scaffold.admin.annotation.OperationLog;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
+import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.mapper.AdminMenuMapper;
 import com.scaffold.admin.mapper.AdminRoleMenuMapper;
 import com.scaffold.admin.mapper.AdminUserRoleMapper;
@@ -111,6 +113,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional
+    @OperationLog(module = "菜单管理", type = OperationType.CREATE)
     public void createMenu(CreateMenuDTO dto) {
         AdminMenu menu = new AdminMenu();
         BeanUtils.copyProperties(dto, menu);
@@ -119,6 +122,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional
+    @OperationLog(module = "菜单管理", type = OperationType.UPDATE)
     public void updateMenu(Long id, UpdateMenuDTO dto) {
         AdminMenu menu = menuMapper.selectById(id);
         if (menu == null) {
@@ -136,6 +140,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional
+    @OperationLog(module = "菜单管理", type = OperationType.DELETE)
     public void deleteMenu(Long id) {
         AdminMenu menu = menuMapper.selectById(id);
         if (menu == null) {
@@ -148,6 +153,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional
+    @OperationLog(module = "菜单管理", type = OperationType.UPDATE, description = "批量排序")
     public void sortMenus(List<SortMenuDTO.SortMenuDTOItem> items) {
         for (SortMenuDTO.SortMenuDTOItem item : items) {
             AdminMenu menu = new AdminMenu();
@@ -248,6 +254,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional
+    @OperationLog(module = "菜单管理", type = OperationType.UPDATE, description = "同步角色菜单")
     public void syncRoleMenus(Long roleId, List<Long> menuIds) {
         // 目录覆盖：如果选中了 directory，自动加入其所有子菜单
         Set<Long> expandedIds = new HashSet<>(menuIds);

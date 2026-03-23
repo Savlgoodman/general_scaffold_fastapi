@@ -2,8 +2,10 @@ package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.scaffold.admin.annotation.OperationLog;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
+import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.mapper.AdminUserMapper;
 import com.scaffold.admin.model.dto.CreateAdminUserDTO;
 import com.scaffold.admin.model.dto.UpdateAdminUserDTO;
@@ -83,6 +85,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional
+    @OperationLog(module = "用户管理", type = OperationType.CREATE)
     public AdminUser createUser(CreateAdminUserDTO dto) {
         // 检查用户名是否存在
         if (isUsernameExists(dto.getUsername())) {
@@ -105,6 +108,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional
+    @OperationLog(module = "用户管理", type = OperationType.UPDATE)
     public AdminUser updateUser(Long id, UpdateAdminUserDTO dto) {
         AdminUser user = adminUserMapper.selectById(id);
         if (user == null) {
@@ -139,6 +143,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional
+    @OperationLog(module = "用户管理", type = OperationType.DELETE)
     public void deleteUser(Long id) {
         AdminUser user = adminUserMapper.selectById(id);
         if (user == null) {
@@ -149,6 +154,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional
+    @OperationLog(module = "用户管理", type = OperationType.DELETE, description = "批量删除")
     public void deleteUsers(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
