@@ -79,12 +79,8 @@ public class RoleController {
     @PostMapping
     @Operation(operationId = "createRole", summary = "创建角色", description = "创建新角色")
     public R<RoleBaseVO> create(@RequestBody @Valid CreateRoleDTO dto) {
-        try {
-            AdminRole role = roleService.createRole(dto);
-            return R.ok(toRoleBaseVO(role));
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.PARAM_ERROR, e.getMessage());
-        }
+        AdminRole role = roleService.createRole(dto);
+        return R.ok(toRoleBaseVO(role));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -93,23 +89,15 @@ public class RoleController {
         @PathVariable("id") Long id,
         @RequestBody @Valid UpdateRoleDTO dto
     ) {
-        try {
-            AdminRole role = roleService.updateRole(id, dto);
-            return R.ok(toRoleBaseVO(role));
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.NOT_FOUND, e.getMessage());
-        }
+        AdminRole role = roleService.updateRole(id, dto);
+        return R.ok(toRoleBaseVO(role));
     }
 
     @DeleteMapping("/{id:\\d+}")
     @Operation(operationId = "deleteRole", summary = "删除角色", description = "删除单个角色")
     public R<Void> delete(@PathVariable("id") Long id) {
-        try {
-            roleService.deleteRole(id);
-            return R.ok();
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.NOT_FOUND, e.getMessage());
-        }
+        roleService.deleteRole(id);
+        return R.ok();
     }
 
     @DeleteMapping

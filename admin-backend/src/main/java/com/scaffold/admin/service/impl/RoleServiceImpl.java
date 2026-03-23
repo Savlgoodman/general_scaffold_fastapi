@@ -1,6 +1,8 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.scaffold.admin.common.BusinessException;
+import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
@@ -55,7 +57,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public AdminRole createRole(CreateRoleDTO dto) {
         if (isCodeExists(dto.getCode())) {
-            throw new IllegalArgumentException("角色编码已存在: " + dto.getCode());
+            throw new BusinessException(ResultCode.PARAM_ERROR, "角色编码已存在");
         }
 
         AdminRole role = new AdminRole();
@@ -74,7 +76,7 @@ public class RoleServiceImpl implements RoleService {
     public AdminRole updateRole(Long id, UpdateRoleDTO dto) {
         AdminRole role = roleMapper.selectById(id);
         if (role == null) {
-            throw new IllegalArgumentException("角色不存在: " + id);
+            throw new BusinessException(ResultCode.NOT_FOUND, "角色不存在");
         }
 
         if (dto.getName() != null) role.setName(dto.getName());
@@ -91,7 +93,7 @@ public class RoleServiceImpl implements RoleService {
     public void deleteRole(Long id) {
         AdminRole role = roleMapper.selectById(id);
         if (role == null) {
-            throw new IllegalArgumentException("角色不存在: " + id);
+            throw new BusinessException(ResultCode.NOT_FOUND, "角色不存在");
         }
         roleMapper.deleteById(id);
     }

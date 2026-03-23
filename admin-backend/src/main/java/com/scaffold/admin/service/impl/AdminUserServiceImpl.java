@@ -2,6 +2,8 @@ package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.scaffold.admin.common.BusinessException;
+import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminUserMapper;
 import com.scaffold.admin.model.dto.CreateAdminUserDTO;
 import com.scaffold.admin.model.dto.UpdateAdminUserDTO;
@@ -84,7 +86,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     public AdminUser createUser(CreateAdminUserDTO dto) {
         // 检查用户名是否存在
         if (isUsernameExists(dto.getUsername())) {
-            throw new IllegalArgumentException("用户名已存在: " + dto.getUsername());
+            throw new BusinessException(ResultCode.PARAM_ERROR, "用户名已存在");
         }
 
         AdminUser user = new AdminUser();
@@ -106,7 +108,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     public AdminUser updateUser(Long id, UpdateAdminUserDTO dto) {
         AdminUser user = adminUserMapper.selectById(id);
         if (user == null) {
-            throw new IllegalArgumentException("用户不存在: " + id);
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
         }
 
         if (dto.getNickname() != null) {
@@ -140,7 +142,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     public void deleteUser(Long id) {
         AdminUser user = adminUserMapper.selectById(id);
         if (user == null) {
-            throw new IllegalArgumentException("用户不存在: " + id);
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
         }
         adminUserMapper.deleteById(id);
     }

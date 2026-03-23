@@ -55,12 +55,8 @@ public class AdminUserController {
     @PostMapping
     @Operation(operationId = "createUser", summary = "创建用户", description = "创建新用户")
     public R<AdminUserVO> create(@RequestBody @Valid CreateAdminUserDTO dto) {
-        try {
-            AdminUser user = adminUserService.createUser(dto);
-            return R.ok(convertToVO(user));
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.PARAM_ERROR, e.getMessage());
-        }
+        AdminUser user = adminUserService.createUser(dto);
+        return R.ok(convertToVO(user));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -69,23 +65,15 @@ public class AdminUserController {
         @PathVariable("id") Long id,
         @RequestBody @Valid UpdateAdminUserDTO dto
     ) {
-        try {
-            AdminUser user = adminUserService.updateUser(id, dto);
-            return R.ok(convertToVO(user));
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.NOT_FOUND, e.getMessage());
-        }
+        AdminUser user = adminUserService.updateUser(id, dto);
+        return R.ok(convertToVO(user));
     }
 
     @DeleteMapping("/{id:\\d+}")
     @Operation(operationId = "deleteUser", summary = "删除用户", description = "删除单个用户")
     public R<Void> delete(@PathVariable("id") Long id) {
-        try {
-            adminUserService.deleteUser(id);
-            return R.ok();
-        } catch (IllegalArgumentException e) {
-            return R.error(ResultCode.NOT_FOUND, e.getMessage());
-        }
+        adminUserService.deleteUser(id);
+        return R.ok();
     }
 
     @DeleteMapping
