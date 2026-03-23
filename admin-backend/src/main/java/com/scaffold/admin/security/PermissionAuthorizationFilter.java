@@ -62,14 +62,14 @@ public class PermissionAuthorizationFilter extends OncePerRequestFilter {
         // 获取当前认证信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            sendForbiddenResponse(response, "未登录");
+            sendUnauthorizedResponse(response, "未登录");
             return;
         }
 
         // 获取用户ID
         Long userId = extractUserId(authentication);
         if (userId == null) {
-            sendForbiddenResponse(response, "无法获取用户信息");
+            sendUnauthorizedResponse(response, "无法获取用户信息");
             return;
         }
 
@@ -114,6 +114,13 @@ public class PermissionAuthorizationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        R<?> errorResponse = R.error(ResultCode.UNAUTHORIZED, message);
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 
     private void sendForbiddenResponse(HttpServletResponse response, String message) throws IOException {
