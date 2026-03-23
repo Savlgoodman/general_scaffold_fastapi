@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import {
   Users,
   Shield,
@@ -10,6 +11,8 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
+  Megaphone,
+  Pin,
 } from "lucide-react"
 import {
   Card,
@@ -19,7 +22,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { getNotices } from "@/api/generated/notices/notices"
+import type { AdminNotice } from "@/api/generated/model"
 import {
   ChartContainer,
   ChartTooltip,
@@ -124,6 +132,74 @@ const systemStatus = [
   { name: "任务调度", status: "正常运行", variant: "default" as const, icon: Clock },
 ]
 
+const noticesApi = getNotices()
+
+function NoticeBoard() {
+  const [notices, setNotices] = useState<AdminNotice[]>([])
+  const [detail, setDetail] = useState<AdminNotice | null>(null)
+
+  useEffect(() => {
+    noticesApi.listNotices({ pageNum: 1, pageSize: 8, status: 'published', type: 'announcement' })
+      .then(res => {
+        if (res.code === 200 && res.data?.records) setNotices(res.data.records)
+      })
+      .catch(() => {})
+  }, [])
+
+  if (notices.length === 0) return null
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-primary" />
+            <CardTitle className="text-lg">公告通知</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-2">
+            {notices.map(n => (
+              <div
+                key={n.id}
+                className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => setDetail(n)}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {n.isTop === 1 && <Pin className="w-3 h-3 text-red-500 shrink-0" />}
+                  <span className="text-sm truncate">{n.title}</span>
+                  <Badge variant="outline" className="text-[10px] shrink-0">{n.type === 'announcement' ? '公告' : '通知'}</Badge>
+                </div>
+                <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                  {n.publishTime?.substring(0, 10)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {detail?.isTop === 1 && <Pin className="w-4 h-4 text-red-500" />}
+              {detail?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Badge variant="outline">{detail?.type === 'announcement' ? '公告' : '通知'}</Badge>
+              <span>{detail?.publishTime?.replace('T', ' ').substring(0, 19)}</span>
+            </div>
+            <div className="text-sm whitespace-pre-wrap leading-relaxed">{detail?.content}</div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
 function Dashboard() {
   return (
     <div className="space-y-6">
@@ -169,6 +245,9 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Notice Board - 公告(announcement)展示 */}
+      <NoticeBoard />
 
       {/* Main Charts Row */}
       <div className="grid gap-6 lg:grid-cols-3">

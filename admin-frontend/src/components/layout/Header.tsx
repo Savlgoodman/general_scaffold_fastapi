@@ -1,9 +1,12 @@
-import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
 import { useAuthStore } from "@/store/auth"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
+import { getNotices } from "@/api/generated/notices/notices"
+import type { AdminNotice } from "@/api/generated/model"
 import {
   Avatar,
   AvatarFallback,
@@ -20,6 +23,54 @@ import {
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+
+const noticesApi = getNotices()
+
+function NoticeMarquee() {
+  const [notices, setNotices] = useState<AdminNotice[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    noticesApi.listNotices({ pageNum: 1, pageSize: 5, status: 'published', type: 'notice' })
+      .then(res => {
+        if (res.code === 200 && res.data?.records) {
+          setNotices(res.data.records)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (notices.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentIndex(i => (i + 1) % notices.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [notices.length])
+
+  if (notices.length === 0) return null
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-md max-w-sm">
+      <Megaphone className="w-3.5 h-3.5 text-primary shrink-0" />
+      <div className="overflow-hidden h-5 flex-1">
+        <div
+          key={currentIndex}
+          className="text-xs text-muted-foreground truncate leading-5"
+          style={{ animation: 'notice-slide-in 0.4s ease-out' }}
+        >
+          {notices[currentIndex]?.title}
+        </div>
+      </div>
+      <style>{`
+        @keyframes notice-slide-in {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
 
 function Header() {
   const { theme, setTheme } = useThemeStore()
@@ -47,15 +98,16 @@ function Header() {
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mr-2 h-4" />
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-1 items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="搜索..."
-            className="pl-8 w-full max-w-xs"
+            className="pl-8 w-full"
           />
         </div>
+        <NoticeMarquee />
       </div>
       <div className="flex items-center">
         <div className="flex items-center gap-1">
@@ -110,11 +162,8 @@ function Header() {
           </DropdownMenu>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon">
             <Bell className="size-4" />
-            <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center">
-              3
-            </span>
           </Button>
         </div>
 

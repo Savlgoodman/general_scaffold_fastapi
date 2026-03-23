@@ -29,8 +29,8 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 }
 
 const typeConfig: Record<string, string> = {
-  notice: '公告',
-  announcement: '通告',
+  notice: '通知',
+  announcement: '公告',
 }
 
 interface FormData {
@@ -276,8 +276,8 @@ export default function NoticeManagement() {
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="notice">公告</SelectItem>
-                  <SelectItem value="announcement">通告</SelectItem>
+                  <SelectItem value="notice">通知</SelectItem>
+                  <SelectItem value="announcement">公告</SelectItem>
                 </SelectContent>
               </Select>
             </div>
