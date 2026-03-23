@@ -3,6 +3,11 @@ server:
   tomcat:
     apr:
       enabled: false
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
 
 spring:
   application:
