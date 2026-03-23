@@ -119,7 +119,7 @@ export default function LoginLogPage() {
                       <TableCell className="text-center font-mono text-sm py-2.5">{log.id}</TableCell>
                       <TableCell className="text-center font-medium py-2.5">{log.username}</TableCell>
                       <TableCell className="text-center py-2.5"><Badge variant={s.variant} className="text-xs">{s.label}</Badge></TableCell>
-                      <TableCell className="py-2.5 text-sm truncate max-w-xs">{log.message || '-'}</TableCell>
+                      <TableCell className="text-center py-2.5 text-sm truncate max-w-xs">{log.message || '-'}</TableCell>
                       <TableCell className="text-center py-2.5 text-sm">{log.ip}</TableCell>
                       <TableCell className="text-center py-2.5 text-sm">{log.createTime?.replace('T', ' ').substring(0, 19)}</TableCell>
                       <TableCell className="text-center py-2.5">

@@ -121,7 +121,7 @@ export default function OperationLogPage() {
                     <TableCell className="text-center py-2.5">
                       <Badge className={`${typeColors[log.operation ?? ''] ?? 'bg-gray-500'} text-white text-xs`}>{typeLabels[log.operation ?? ''] ?? log.operation}</Badge>
                     </TableCell>
-                    <TableCell className="py-2.5 font-mono text-xs truncate max-w-xs">{log.methodName}</TableCell>
+                    <TableCell className="text-center py-2.5 font-mono text-xs truncate max-w-xs">{log.methodName}</TableCell>
                     <TableCell className="text-center py-2.5 text-sm">{log.ip}</TableCell>
                     <TableCell className="text-center py-2.5 text-sm">{log.createTime?.replace('T', ' ').substring(0, 19)}</TableCell>
                     <TableCell className="text-center py-2.5">
