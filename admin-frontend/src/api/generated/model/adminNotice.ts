@@ -30,4 +30,8 @@ export interface AdminNotice {
   isTop?: number;
   /** 发布时间 */
   publishTime?: string;
+  /** 发布者ID */
+  publisherId?: number;
+  /** 发布者用户名 */
+  publisherName?: string;
 }

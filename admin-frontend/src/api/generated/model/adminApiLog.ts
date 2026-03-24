@@ -40,4 +40,6 @@ export interface AdminApiLog {
   ip?: string;
   /** User-Agent */
   userAgent?: string;
+  /** API名称（关联权限表） */
+  apiName?: string;
 }

@@ -12,8 +12,8 @@
 export interface CreateNoticeDTO {
   /** 公告标题 */
   title: string;
-  /** 公告内容 */
-  content: string;
+  /** 公告内容（通知类型选填，公告类型必填） */
+  content?: string;
   /** 公告类型（notice-公告 announcement-通告） */
   type?: string;
 }

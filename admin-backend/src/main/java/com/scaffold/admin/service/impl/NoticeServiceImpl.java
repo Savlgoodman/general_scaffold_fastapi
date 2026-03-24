@@ -11,6 +11,8 @@ import com.scaffold.admin.model.dto.UpdateNoticeDTO;
 import com.scaffold.admin.model.entity.AdminNotice;
 import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.service.NoticeService;
+import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
+import com.scaffold.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,6 +112,11 @@ public class NoticeServiceImpl implements NoticeService {
         }
         notice.setStatus("published");
         notice.setPublishTime(LocalDateTime.now());
+        AdminUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            notice.setPublisherId(currentUser.getId());
+            notice.setPublisherName(currentUser.getUsername());
+        }
         noticeMapper.updateById(notice);
     }
 

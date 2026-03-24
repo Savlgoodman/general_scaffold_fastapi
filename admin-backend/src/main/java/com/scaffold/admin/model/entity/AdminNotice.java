@@ -31,4 +31,10 @@ public class AdminNotice extends BaseEntity {
 
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;
+
+    @Schema(description = "发布者ID")
+    private Long publisherId;
+
+    @Schema(description = "发布者用户名")
+    private String publisherName;
 }

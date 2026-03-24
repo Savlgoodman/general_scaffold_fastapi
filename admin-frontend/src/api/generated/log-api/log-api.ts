@@ -19,7 +19,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getLogApi = () => {
 /**
- * 分页查询API请求日志
+ * 分页查询API请求日志，关联权限表展示API名称
  * @summary API日志列表
  */
 const listApiLogs = (

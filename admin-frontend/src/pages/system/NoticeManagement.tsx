@@ -201,15 +201,16 @@ export default function NoticeManagement() {
                   <TableHead className="w-20 text-center">类型</TableHead>
                   <TableHead className="w-20 text-center">状态</TableHead>
                   <TableHead className="w-16 text-center">置顶</TableHead>
+                  <TableHead className="text-center">发布者</TableHead>
                   <TableHead className="w-40 text-center">发布时间</TableHead>
                   <TableHead className="w-36 text-center">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={7} className="p-0"><TableSkeleton rows={5} cols={7} /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="p-0"><TableSkeleton rows={5} cols={7} /></TableCell></TableRow>
                 ) : notices.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : notices.map((n, i) => {
                   const s = statusConfig[n.status ?? ''] ?? { label: n.status, variant: 'secondary' as const }
                   return (
@@ -222,6 +223,7 @@ export default function NoticeManagement() {
                       <TableCell className="text-center py-2.5"><Badge variant="outline" className="text-xs">{typeConfig[n.type ?? ''] ?? n.type}</Badge></TableCell>
                       <TableCell className="text-center py-2.5"><Badge variant={s.variant} className="text-xs">{s.label}</Badge></TableCell>
                       <TableCell className="text-center py-2.5">{n.isTop === 1 ? '是' : '-'}</TableCell>
+                      <TableCell className="text-center py-2.5 text-sm">{(n as any).publisherName || '-'}</TableCell>
                       <TableCell className="text-center py-2.5 text-sm">{n.publishTime?.replace('T', ' ').substring(0, 19) || '-'}</TableCell>
                       <TableCell className="text-center py-2.5">
                         <div className="flex justify-center gap-1">
