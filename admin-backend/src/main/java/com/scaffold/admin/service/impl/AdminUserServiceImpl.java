@@ -181,6 +181,16 @@ public class AdminUserServiceImpl implements AdminUserService {
         );
     }
 
+    @Override
+    public void updateAvatar(Long userId, String avatarUrl) {
+        AdminUser user = adminUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        user.setAvatar(avatarUrl);
+        adminUserMapper.updateById(user);
+    }
+
     /**
      * 管理员用户详情
      */

@@ -6,13 +6,18 @@ import com.scaffold.admin.model.dto.RefreshTokenDTO;
 import com.scaffold.admin.model.dto.RegisterDTO;
 import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
+import com.scaffold.admin.model.vo.FileUploadVO;
+import com.scaffold.admin.service.AdminUserService;
 import com.scaffold.admin.service.AuthService;
+import com.scaffold.admin.service.FileService;
 import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
+import com.scaffold.admin.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 认证控制器：验证码、登录、注册、刷新Token、登出
@@ -24,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final FileService fileService;
+    private final AdminUserService adminUserService;
 
     /**
      * 获取图形验证码
@@ -82,5 +89,19 @@ public class AuthController {
     @Operation(operationId = "getCurrentUser", summary = "获取当前用户信息", description = "获取当前登录用户的信息")
     public R<AdminUserDetails> getCurrentUser(@AuthenticationPrincipal AdminUserDetails userDetails) {
         return R.ok(userDetails);
+    }
+
+    /**
+     * 上传并更新当前用户头像
+     */
+    @PostMapping("/avatar")
+    @Operation(operationId = "updateAvatar", summary = "上传头像", description = "上传头像图片并更新当前用户头像URL")
+    public R<FileUploadVO> updateAvatar(@RequestParam("file") MultipartFile file) {
+        FileUploadVO uploadVO = fileService.uploadAvatar(file);
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId != null) {
+            adminUserService.updateAvatar(userId, uploadVO.getUrl());
+        }
+        return R.ok(uploadVO);
     }
 }

@@ -62,4 +62,9 @@ public interface AdminUserService {
      * 根据用户名获取用户
      */
     AdminUser getUserByUsername(String username);
+
+    /**
+     * 更新用户头像
+     */
+    void updateAvatar(Long userId, String avatarUrl);
 }
