@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
 import { useAuthStore } from "@/store/auth"
@@ -78,6 +79,7 @@ function NoticeMarquee() {
 }
 
 function Header() {
+  const navigate = useNavigate()
   const { theme, setTheme } = useThemeStore()
   const { logout, user, devMode, toggleDevMode } = useAuthStore()
   const isSuperuser = user?.isSuperuser === 1
@@ -179,7 +181,7 @@ function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="size-8">
-                <AvatarImage src="" alt={displayName} />
+                <AvatarImage src={user?.avatar || ''} alt={displayName} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {displayName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
@@ -196,7 +198,7 @@ function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>个人中心</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/profile')}>个人中心</DropdownMenuItem>
             <DropdownMenuItem>设置</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">

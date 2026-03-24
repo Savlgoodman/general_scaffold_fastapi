@@ -9,9 +9,11 @@ import type {
   LoginDTO,
   RAdminUserDetails,
   RCaptchaVO,
+  RFileUploadVO,
   RLoginVO,
   RVoid,
-  RefreshTokenDTO
+  RefreshTokenDTO,
+  UpdateAvatarBody
 } from '../model';
 
 import { customInstance } from '../../custom-instance';
@@ -63,6 +65,20 @@ const login = (
       options);
     }
   /**
+ * 上传头像图片并更新当前用户头像URL
+ * @summary 上传头像
+ */
+const updateAvatar = (
+    updateAvatarBody: BodyType<UpdateAvatarBody>,
+ options?: SecondParameter<typeof customInstance<RFileUploadVO>>,) => {
+      return customInstance<RFileUploadVO>(
+      {url: `/api/admin/auth/avatar`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAvatarBody
+    },
+      options);
+    }
+  /**
  * 获取当前登录用户的信息
  * @summary 获取当前用户信息
  */
@@ -86,9 +102,10 @@ const getCaptcha = (
     },
       options);
     }
-  return {refreshToken,logout,login,getCurrentUser,getCaptcha}};
+  return {refreshToken,logout,login,updateAvatar,getCurrentUser,getCaptcha}};
 export type RefreshTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['refreshToken']>>>
 export type LogoutResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['logout']>>>
 export type LoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['login']>>>
+export type UpdateAvatarResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['updateAvatar']>>>
 export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['getCurrentUser']>>>
 export type GetCaptchaResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['getCaptcha']>>>
