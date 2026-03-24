@@ -73,7 +73,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public LoginVO login(LoginDTO loginDTO) {
         String username = loginDTO.getUsername();
         String ip = IpUtils.getClientIp(httpServletRequest);
