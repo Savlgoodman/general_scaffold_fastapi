@@ -40,11 +40,7 @@
 
 > 描述系统各模块的现状、功能范围、数据模型等。
 
-（暂无文档）
-
-<!-- 示例条目格式：
-- [SYSTEM_RBAC_SUMMARY.md](./SYSTEM_RBAC_SUMMARY.md) — RBAC 权限体系总结：角色、权限、菜单模型及鉴权流程
--->
+- [SYSTEM_MENU_MANAGEMENT.md](./SYSTEM_MENU_MANAGEMENT.md) — 菜单管理系统：树形菜单设计、角色关联、动画渲染、开发者模式
 
 ---
 
@@ -52,11 +48,7 @@
 
 > 记录功能升级的规划、变更内容、迁移方案等。
 
-（暂无文档）
-
-<!-- 示例条目格式：
-- [UPDATE_NOTICE_AUTH_UPGRADE.md](./UPDATE_NOTICE_AUTH_UPGRADE.md) — 通知公告系统升级：Markdown 编辑器、发布者追踪、置顶样式
--->
+- [UPDATE_NOTIFICATION_AND_MONITOR_SYSTEM.md](./UPDATE_NOTIFICATION_AND_MONITOR_SYSTEM.md) — 通知公告及系统监控功能：后端接口设计、前端页面规划、实施步骤
 
 ---
 
@@ -64,7 +56,8 @@
 
 > 技术方案、数据库设计、系统架构等设计类文档。
 
-（暂无文档）
+- [DESIGN_BACKEND_MIDDLEWARE_REFACTOR.md](./DESIGN_BACKEND_MIDDLEWARE_REFACTOR.md) — 后端中间件重构：异常处理、日志优化、JWT 性能、安全白名单统一
+- [DESIGN_LOGGING_SYSTEM_IMPLEMENTATION.md](./DESIGN_LOGGING_SYSTEM_IMPLEMENTATION.md) — 日志体系实现方案：API 日志、操作审计、异常日志、异步基础设施
 
 ---
 
