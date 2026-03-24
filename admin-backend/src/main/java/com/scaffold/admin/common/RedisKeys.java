@@ -8,7 +8,8 @@ public enum RedisKeys {
     CAPTCHA("captcha", "验证码"),
     TOKEN_BLACKLIST("token:blacklist", "Token黑名单"),
     LOGIN_FAIL("login:fail", "登录失败计数"),
-    USER_REFRESH_TOKEN("user:refresh_token", "用户当前有效的Refresh Token");
+    USER_REFRESH_TOKEN("user:refresh_token", "用户当前有效的Refresh Token"),
+    ONLINE_SESSION("online:session", "用户在线会话");
 
     private final String prefix;
     private final String description;

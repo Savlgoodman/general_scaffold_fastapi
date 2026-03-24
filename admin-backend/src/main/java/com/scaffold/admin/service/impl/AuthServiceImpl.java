@@ -16,6 +16,7 @@ import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
 import com.scaffold.admin.model.vo.MenuVO;
+import com.scaffold.admin.model.vo.OnlineSessionData;
 import com.scaffold.admin.model.vo.UserVO;
 import com.scaffold.admin.security.JwtTokenProvider;
 import com.scaffold.admin.service.AuthService;
@@ -34,6 +35,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final int MAX_LOGIN_FAIL_COUNT = 5;
     private static final long LOCK_DURATION = 15; // 锁定15分钟
+    private static final long ONLINE_SESSION_TTL = 6; // 在线会话TTL（分钟）
 
     private final AdminUserMapper adminUserMapper;
     private final AdminLoginLogMapper loginLogMapper;
@@ -128,6 +131,9 @@ public class AuthServiceImpl implements AuthService {
 
             // 存储Refresh Token用于精确注销
             storeRefreshToken(user.getId(), refreshToken);
+
+            // 创建在线会话
+            createOnlineSession(user, accessToken, ip, userAgent);
 
             // 记录登录日志
             recordLoginLog(username, "success", ip, userAgent, "登录成功");
@@ -229,6 +235,9 @@ public class AuthServiceImpl implements AuthService {
         // 存储新的Refresh Token
         storeRefreshToken(user.getId(), newRefreshToken);
 
+        // 更新在线会话（重置TTL + 更新accessToken和lastActiveTime）
+        updateOnlineSession(user, newAccessToken);
+
         return buildLoginVO(user, newAccessToken, newRefreshToken);
     }
 
@@ -249,6 +258,8 @@ public class AuthServiceImpl implements AuthService {
                     jwtTokenProvider.addToBlacklist(storedRefreshToken);
                     deleteStoredRefreshToken(userId);
                 }
+                // 删除在线会话
+                deleteOnlineSession(userId);
             }
 
             log.debug("用户登出，Token已加入黑名单");
@@ -338,6 +349,62 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.error("记录登录日志失败", e);
         }
+    }
+
+    /**
+     * 创建在线会话（登录时调用）
+     */
+    private void createOnlineSession(AdminUser user, String accessToken, String ip, String userAgent) {
+        OnlineSessionData session = new OnlineSessionData();
+        session.setUserId(user.getId());
+        session.setUsername(user.getUsername());
+        session.setNickname(user.getNickname());
+        session.setLoginIp(ip);
+        session.setUserAgent(userAgent);
+        session.setLoginTime(LocalDateTime.now());
+        session.setLastActiveTime(LocalDateTime.now());
+        session.setAccessToken(accessToken);
+
+        String key = RedisKeys.ONLINE_SESSION.key(user.getId().toString());
+        redisTemplate.opsForValue().set(key, session, ONLINE_SESSION_TTL, TimeUnit.MINUTES);
+    }
+
+    /**
+     * 更新在线会话（refresh时调用，重置TTL）
+     */
+    private void updateOnlineSession(AdminUser user, String newAccessToken) {
+        String key = RedisKeys.ONLINE_SESSION.key(user.getId().toString());
+        Object existing = redisTemplate.opsForValue().get(key);
+
+        OnlineSessionData session;
+        if (existing instanceof OnlineSessionData existingSession) {
+            session = existingSession;
+            session.setLastActiveTime(LocalDateTime.now());
+            session.setAccessToken(newAccessToken);
+        } else {
+            // 会话已过期，重新创建
+            String ip = IpUtils.getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            session = new OnlineSessionData();
+            session.setUserId(user.getId());
+            session.setUsername(user.getUsername());
+            session.setNickname(user.getNickname());
+            session.setLoginIp(ip);
+            session.setUserAgent(userAgent);
+            session.setLoginTime(LocalDateTime.now());
+            session.setLastActiveTime(LocalDateTime.now());
+            session.setAccessToken(newAccessToken);
+        }
+
+        redisTemplate.opsForValue().set(key, session, ONLINE_SESSION_TTL, TimeUnit.MINUTES);
+    }
+
+    /**
+     * 删除在线会话（登出时调用）
+     */
+    private void deleteOnlineSession(Long userId) {
+        String key = RedisKeys.ONLINE_SESSION.key(userId.toString());
+        redisTemplate.delete(key);
     }
 
     /**
