@@ -11,6 +11,7 @@ import ErrorLogPage from "@/pages/logs/ErrorLogPage"
 import NoticeManagement from "@/pages/system/NoticeManagement"
 import SystemMonitor from "@/pages/system/SystemMonitor"
 import Profile from "@/pages/Profile"
+import StorageManagement from "@/pages/system/StorageManagement"
 
 export interface RouteConfig {
   path: string
@@ -36,5 +37,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/logs/error", title: "异常日志", icon: "AlertCircle", element: <ErrorLogPage /> },
   { path: "/system/notice", title: "通知公告", icon: "Bell", element: <NoticeManagement /> },
   { path: "/system/monitor", title: "系统监控", icon: "Activity", element: <SystemMonitor /> },
+  { path: "/system/storage", title: "存储管理", icon: "HardDrive", element: <StorageManagement /> },
   { path: "/profile", title: "个人中心", icon: "User", element: <Profile /> },
 ]
