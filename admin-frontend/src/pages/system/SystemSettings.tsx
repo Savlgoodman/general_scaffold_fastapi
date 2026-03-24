@@ -40,7 +40,6 @@ const DEFAULTS: Record<string, string> = {
   login_max_retry: '5',
   login_lock_duration: '30',
   password_min_length: '6',
-  session_timeout: '30',
   default_theme: 'system',
   sidebar_collapsed: 'false',
   login_bg_image: '',
@@ -51,7 +50,7 @@ const DEFAULTS: Record<string, string> = {
 const BOOLEAN_KEYS = new Set(['login_captcha_enabled', 'sidebar_collapsed'])
 
 // 数字类型的配置项
-const NUMBER_KEYS = new Set(['login_max_retry', 'login_lock_duration', 'password_min_length', 'session_timeout'])
+const NUMBER_KEYS = new Set(['login_max_retry', 'login_lock_duration', 'password_min_length'])
 
 // 图片上传类型的配置项
 const IMAGE_KEYS = new Set(['site_logo', 'site_favicon', 'login_bg_image'])
@@ -61,7 +60,6 @@ const NUMBER_UNITS: Record<string, string> = {
   login_max_retry: '次',
   login_lock_duration: '分钟',
   password_min_length: '位',
-  session_timeout: '分钟',
 }
 
 export default function SystemSettings() {
