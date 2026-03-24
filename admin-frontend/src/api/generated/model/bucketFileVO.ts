@@ -20,4 +20,6 @@ export interface BucketFileVO {
   contentType?: string;
   /** 最后修改时间 */
   lastModified?: string;
+  /** 访问URL */
+  url?: string;
 }
