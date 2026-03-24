@@ -12,6 +12,7 @@ import NoticeManagement from "@/pages/system/NoticeManagement"
 import SystemMonitor from "@/pages/system/SystemMonitor"
 import Profile from "@/pages/Profile"
 import StorageManagement from "@/pages/system/StorageManagement"
+import OnlineUsers from "@/pages/monitor/OnlineUsers"
 
 export interface RouteConfig {
   path: string
@@ -38,5 +39,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/system/notice", title: "通知公告", icon: "Bell", element: <NoticeManagement /> },
   { path: "/system/monitor", title: "系统监控", icon: "Activity", element: <SystemMonitor /> },
   { path: "/system/storage", title: "存储管理", icon: "HardDrive", element: <StorageManagement /> },
+  { path: "/monitor/online", title: "在线用户", icon: "Monitor", element: <OnlineUsers /> },
   { path: "/profile", title: "个人中心", icon: "User", element: <Profile /> },
 ]
