@@ -60,6 +60,7 @@
 - [DESIGN_BACKEND_MIDDLEWARE_REFACTOR.md](./DESIGN_BACKEND_MIDDLEWARE_REFACTOR.md) — 后端中间件重构：异常处理、日志优化、JWT 性能、安全白名单统一
 - [DESIGN_LOGGING_SYSTEM_IMPLEMENTATION.md](./DESIGN_LOGGING_SYSTEM_IMPLEMENTATION.md) — 日志体系实现方案：API 日志、操作审计、异常日志、异步基础设施
 - [DESIGN_ONLINE_USER_SESSION_MANAGEMENT.md](./DESIGN_ONLINE_USER_SESSION_MANAGEMENT.md) — 在线用户会话管理：Refresh 心跳检测、强制下线、Redis 会话存储
+- [DESIGN_SYSTEM_CONFIG.md](./DESIGN_SYSTEM_CONFIG.md) — 系统设置功能：KV 配置表、站点品牌/安全策略/外观设置、公开配置接口
 
 ---
 
