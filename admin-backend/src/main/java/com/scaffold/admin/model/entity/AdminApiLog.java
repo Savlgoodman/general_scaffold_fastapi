@@ -1,5 +1,6 @@
 package com.scaffold.admin.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.scaffold.admin.common.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,4 +45,8 @@ public class AdminApiLog extends BaseEntity {
 
     @Schema(description = "User-Agent")
     private String userAgent;
+
+    @Schema(description = "API名称（关联权限表）")
+    @TableField(exist = false)
+    private String apiName;
 }

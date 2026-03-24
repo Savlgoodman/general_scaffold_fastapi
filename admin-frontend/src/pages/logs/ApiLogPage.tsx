@@ -102,6 +102,7 @@ export default function ApiLogPage() {
                   <TableHead className="w-14 text-center h-10">ID</TableHead>
                   <TableHead className="w-20 text-center">方法</TableHead>
                   <TableHead className="text-center">路径</TableHead>
+                  <TableHead className="text-center">API名称</TableHead>
                   <TableHead className="text-center">用户</TableHead>
                   <TableHead className="w-20 text-center">状态码</TableHead>
                   <TableHead className="w-20 text-center">耗时</TableHead>
@@ -112,14 +113,15 @@ export default function ApiLogPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={9} className="p-0"><TableSkeleton rows={8} cols={9} /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="p-0"><TableSkeleton rows={8} cols={10} /></TableCell></TableRow>
                 ) : logs.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : logs.map((log, i) => (
                   <TableRow key={log.id} className={i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
                     <TableCell className="text-center font-mono text-sm py-2.5">{log.id}</TableCell>
                     <TableCell className="text-center py-2.5"><MethodBadge method={log.method} /></TableCell>
                     <TableCell className="py-2.5 font-mono text-sm truncate max-w-xs" title={log.path}>{log.path}</TableCell>
+                    <TableCell className="text-center py-2.5 text-sm text-muted-foreground">{(log as any).apiName || '-'}</TableCell>
                     <TableCell className="text-center py-2.5">{log.username || '-'}</TableCell>
                     <TableCell className="text-center py-2.5">
                       <Badge variant={log.responseCode === 200 ? 'default' : 'destructive'} className="text-xs">{log.responseCode}</Badge>
@@ -172,6 +174,7 @@ export default function ApiLogPage() {
                 <div><span className="text-muted-foreground">时间：</span>{detail.createTime?.replace('T', ' ')}</div>
               </div>
               <div><span className="text-muted-foreground">路径：</span><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{detail.path}</code></div>
+              {(detail as any).apiName && <div><span className="text-muted-foreground">API名称：</span>{(detail as any).apiName}</div>}
               {detail.queryParams && <div><span className="text-muted-foreground">查询参数：</span><pre className="bg-muted p-2 rounded mt-1 text-xs overflow-x-auto whitespace-pre-wrap break-all">{detail.queryParams}</pre></div>}
               {detail.requestBody && <JsonPreview label="请求体" content={detail.requestBody} />}
               {detail.responseBody && <JsonPreview label="响应体" content={detail.responseBody} />}
