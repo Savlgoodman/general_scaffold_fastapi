@@ -64,6 +64,7 @@ export default function PreferencesSheet({ open, onOpenChange }: Props) {
                 <SelectContent>
                   <SelectItem value="default">默认分组</SelectItem>
                   <SelectItem value="compact">紧凑列表</SelectItem>
+                  <SelectItem value="collapsible">可折叠分组</SelectItem>
                   <SelectItem value="flat">扁平无组</SelectItem>
                 </SelectContent>
               </Select>

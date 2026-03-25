@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 type NoticeSpeed = 'slow' | 'normal' | 'fast'
-export type SidebarStyle = 'default' | 'compact' | 'flat'
+export type SidebarStyle = 'default' | 'compact' | 'flat' | 'collapsible'
 export type AvatarPosition = 'header' | 'sidebar'
 
 interface PreferencesState {

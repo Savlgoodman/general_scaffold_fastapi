@@ -1,11 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { LayoutDashboard, Settings, LogOut, ChevronRight } from "lucide-react"
+import { useState } from "react"
+import { LayoutDashboard, Settings, LogOut, ChevronRight, ChevronDown } from "lucide-react"
 import { useAuthStore } from "@/store/auth"
 import { useSiteConfigStore } from "@/store/site-config"
 import { usePreferencesStore } from "@/store/preferences"
 import { appRoutes } from "@/routes"
 import { getIcon } from "@/lib/icon-map"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -189,9 +191,49 @@ function AppSidebar() {
     </SidebarGroup>
   )
 
+  // 可折叠分组样式：目录可点击展开/折叠
+  const renderCollapsible = () => menus.map((item) => {
+    if (item.type === "directory" && item.children?.length) {
+      const DirIcon = getIcon(item.icon)
+      // 如果任一子菜单 path 与当前路由匹配，默认展开
+      const hasActiveChild = item.children.some(c => location.pathname === c.path)
+      return (
+        <CollapsibleGroup key={item.id} icon={DirIcon} label={item.name ?? ''} defaultOpen={hasActiveChild}>
+          <SidebarMenuSub>
+            {item.children.map((child) => {
+              const ChildIcon = getIcon(child.icon)
+              return (
+                <SidebarMenuSubItem key={child.id}>
+                  <SidebarMenuSubButton asChild isActive={location.pathname === child.path}>
+                    <Link to={child.path ?? "/"}><ChildIcon className="size-4" data-icon="inline-start" />{child.name}</Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
+          </SidebarMenuSub>
+        </CollapsibleGroup>
+      )
+    }
+    const ItemIcon = getIcon(item.icon)
+    return (
+      <SidebarGroup key={item.id}>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.name}>
+                <Link to={item.path ?? "/"}><ItemIcon className="size-4" data-icon="inline-start" />{item.name}</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  })
+
   const renderExpandedMenus = () => {
     if (showDevMode) return renderDevMode()
     if (sidebarStyle === 'compact') return renderCompact()
+    if (sidebarStyle === 'collapsible') return renderCollapsible()
     if (sidebarStyle === 'flat') return renderFlat()
     return renderDefault()
   }
@@ -266,6 +308,34 @@ function AppSidebar() {
         </SidebarFooter>
       )}
     </Sidebar>
+  )
+}
+
+// 可折叠分组子组件
+function CollapsibleGroup({ icon: Icon, label, defaultOpen = false, children }: {
+  icon: React.ComponentType<{ className?: string; 'data-icon'?: string }>
+  label: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <SidebarGroup>
+        <CollapsibleTrigger asChild>
+          <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent/50 rounded-md transition-colors">
+            <Icon className="size-4" data-icon="inline-start" />
+            {label}
+            <ChevronDown className={`ml-auto size-3.5 transition-transform ${open ? '' : '-rotate-90'}`} />
+          </SidebarGroupLabel>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            {children}
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
   )
 }
 
