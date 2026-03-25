@@ -81,6 +81,39 @@ CREATE INDEX idx_admin_task_log_status ON admin_task_log(status);
 CREATE INDEX idx_admin_task_log_create_time ON admin_task_log(create_time);
 ```
 
+### 2.3 定时任务配置表 `admin_task_config`
+
+```sql
+CREATE TABLE admin_task_config (
+    id BIGSERIAL PRIMARY KEY,
+    task_name VARCHAR(100) NOT NULL UNIQUE,  -- 任务标识（英文，如 api-log-cleanup）
+    task_label VARCHAR(100) NOT NULL,        -- 任务显示名（中文，如 API日志清理）
+    task_group VARCHAR(50) DEFAULT 'system', -- 分组：system/file/log
+    cron_expression VARCHAR(50) NOT NULL,    -- Cron 表达式
+    enabled INTEGER DEFAULT 1,              -- 是否启用：1-启用 0-停用
+    description VARCHAR(255),               -- 任务描述
+    last_run_time TIMESTAMP,                -- 上次执行时间
+    last_run_status VARCHAR(20),            -- 上次执行状态
+    is_deleted INTEGER DEFAULT 0,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_admin_task_config_name ON admin_task_config(task_name);
+```
+
+**初始数据**（通过 Flyway 插入）：
+
+```sql
+INSERT INTO admin_task_config (task_name, task_label, task_group, cron_expression, description) VALUES
+('api-log-cleanup', 'API日志清理', 'log', '0 0 3 * * ?', '清理超过保留天数的API请求日志'),
+('operation-log-cleanup', '操作日志清理', 'log', '0 30 3 * * ?', '清理超过保留天数的操作审计日志'),
+('login-log-cleanup', '登录日志清理', 'log', '0 0 4 * * ?', '清理超过保留天数的登录日志'),
+('error-log-cleanup', '异常日志清理', 'log', '0 30 4 * * ?', '清理超过保留天数的异常日志'),
+('orphan-file-scan', '孤儿文件扫描', 'file', '0 0 2 * * ?', '扫描无引用文件移入回收站'),
+('recycle-bin-cleanup', '回收站清空', 'file', '0 0 5 * * SUN', '彻底删除回收站中超过保留天数的文件');
+```
+
 ## 三、文件中心
 
 ### 3.1 后端 — FileService 重构
@@ -142,9 +175,9 @@ Service 层（业务逻辑唯一归属）
 └── ...
 
 调用方（不含业务逻辑，只做调度/触发）
-├── 定时任务 Task    → @Scheduled 定时调用 Service 方法
-├── TaskController   → POST /{taskName}/run 手动触发 Service 方法
-└── FileController   → 文件中心页面按钮触发 Service 方法
+├── DynamicTaskScheduler  → 从 DB 读 Cron，动态注册调度
+├── TaskController        → POST /{taskName}/run 手动触发 Service 方法
+└── FileController        → 文件中心页面按钮触发 Service 方法
 ```
 
 **前端联动**：
@@ -176,9 +209,66 @@ public R<Void> runTaskManually(@PathVariable String taskName) {
 
 ---
 
-## 五、调度中心
+## 五、调度中心 — 动态调度方案
 
-### 5.1 定时任务清单
+### 5.1 技术方案：`SchedulingConfigurer` + 数据库
+
+**不使用 `@Scheduled` 注解**，改为 Spring 的 `SchedulingConfigurer` 接口，从 `admin_task_config` 表动态读取 Cron。
+
+**核心优势**：
+- Cron 存在数据库，前端直接修改，**实时生效无需重启**
+- 任务在线启用/停用
+- 每次触发前重新读 DB，所以修改后下一次执行就用新 Cron
+
+### 5.2 DynamicTaskScheduler
+
+```java
+@Component
+public class DynamicTaskScheduler implements SchedulingConfigurer {
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar registrar) {
+        // 从 DB 加载所有 enabled 任务
+        for (AdminTaskConfig task : tasks) {
+            registrar.addTriggerTask(
+                () -> taskExecutorService.execute(task.getTaskName()),
+                triggerContext -> {
+                    // 每次触发前从 DB 读最新 Cron（动态更新）
+                    AdminTaskConfig latest = reload(task.getTaskName());
+                    if (latest == null || latest.getEnabled() != 1) return null;
+                    return new CronTrigger(latest.getCronExpression())
+                        .nextExecution(triggerContext);
+                }
+            );
+        }
+    }
+}
+```
+
+### 5.3 TaskExecutorService — 统一执行入口
+
+所有任务执行（定时+手动）经过此 Service，统一记录日志：
+
+```java
+@Service
+public class TaskExecutorService {
+    public void execute(String taskName) {
+        Long logId = taskLogService.startTask(taskName);
+        try {
+            String detail = switch (taskName) {
+                case "api-log-cleanup" -> logCleanService.cleanApiLogs();
+                case "orphan-file-scan" -> fileService.scanOrphanFiles();
+                case "recycle-bin-cleanup" -> fileService.emptyRecycleBin();
+                // ...
+            };
+            taskLogService.finishTask(logId, detail);
+        } catch (Exception e) {
+            taskLogService.failTask(logId, e.getMessage());
+        }
+    }
+}
+```
+
+### 5.4 定时任务清单
 
 | 任务名 | Cron | 说明 | 配置项 |
 |--------|------|------|--------|
@@ -189,7 +279,7 @@ public R<Void> runTaskManually(@PathVariable String taskName) {
 | 孤儿文件扫描 | `0 0 2 * * ?` | 扫描无引用文件移入回收站 | — |
 | 回收站清空 | `0 0 5 * * SUN` | 每周日清空回收站 7 天以上的文件 | `app.file.recycle-bin-retention-days: 7` |
 
-### 5.2 孤儿文件检测逻辑
+### 5.5 孤儿文件检测逻辑
 
 1. 查询 `admin_file` 表中 `status=active` 的所有文件 URL
 2. 扫描以下表的 URL 字段，收集"正在使用"的 URL 集合：
@@ -198,42 +288,31 @@ public R<Void> runTaskManually(@PathVariable String taskName) {
    - `admin_system_config.config_value`（logo/favicon/bg_image）
 3. 差集 = 孤儿文件（在 `admin_file` 中但不被任何表引用）
 4. 将孤儿文件 `status` 改为 `recycled`，记录 `deleted_at`
+5. 返回 `"扫描孤儿文件 5 个，已移入回收站"`
 
-### 5.3 任务执行日志
-
-每个定时任务执行时：
-1. 开始前写入 `admin_task_log`，status=running
-2. 执行完成后更新 status=success/failed，记录 duration_ms 和 detail
-3. detail 示例：`"清理 API 日志 1234 条"` / `"扫描孤儿文件 5 个，已移入回收站"`
-
-### 5.4 TaskLogService
-
-封装任务日志写入逻辑，所有定时任务共用：
-
-```java
-public class TaskLogService {
-    public Long startTask(String name, String group);
-    public void finishTask(Long logId, String detail);
-    public void failTask(Long logId, String message);
-}
-```
-
-### 5.5 后端 — TaskController
+### 5.6 后端 — TaskController
 
 **路由前缀**：`/api/admin/tasks`
 
 | 方法 | 路径 | operationId | 说明 |
 |------|------|-------------|------|
-| GET | `/logs` | `listTaskLogs` | 任务执行日志（分页+筛选） |
-| GET | `/logs/{id}` | `getTaskLogDetail` | 任务日志详情 |
-| POST | `/{taskName}/run` | `runTaskManually` | 手动触发任务执行 |
+| GET | `/configs` | `listTaskConfigs` | 任务配置列表 |
+| PUT | `/configs/{id}` | `updateTaskConfig` | 修改 Cron / 启用状态（实时生效） |
+| POST | `/{taskName}/run` | `runTaskManually` | 手动触发执行 |
+| GET | `/logs` | `listTaskLogs` | 执行日志（分页+按任务筛选） |
+| GET | `/logs/{id}` | `getTaskLogDetail` | 执行日志详情 |
 
-### 5.6 前端 — 调度中心页
+### 5.7 前端 — 调度中心页
 
-**页面结构**：
-- **任务列表**：展示所有注册的定时任务（名称、Cron 表达式、上次执行时间、状态）
-- **执行日志 Tab**：展示任务执行历史（分页、按任务名筛选）
-- **手动触发**：每个任务旁有"立即执行"按钮
+**Tab 1 — 任务配置**：
+- 表格：任务名、分组、Cron 表达式、启用/停用 Switch、上次执行时间/状态
+- 操作：编辑 Cron（弹窗修改，保存即生效）、启用/停用 Switch、立即执行按钮
+- Cron 表达式旁显示可读描述（如"每天凌晨 3:00"）
+
+**Tab 2 — 执行日志**：
+- 表格：任务名、执行时间、状态 Badge（success/failed/running）、耗时、结果摘要
+- 筛选：按任务名、按状态
+- 点击查看详情
 
 ## 六、文件清单
 
@@ -244,13 +323,14 @@ public class TaskLogService {
 | `db/migration/V12__file_center_and_task_log.sql` | 新建 admin_file 和 admin_task_log 表 |
 | `model/entity/AdminFile.java` | 文件记录实体 |
 | `model/entity/AdminTaskLog.java` | 任务执行日志实体 |
+| `model/entity/AdminTaskConfig.java` | 任务配置实体 |
+| `mapper/AdminTaskConfigMapper.java` | 任务配置 Mapper |
 | `mapper/AdminFileMapper.java` | 文件 Mapper |
 | `mapper/AdminTaskLogMapper.java` | 任务日志 Mapper |
 | `service/TaskLogService.java` | 任务日志写入服务 |
+| `service/TaskExecutorService.java` | 任务执行统一入口（taskName→Service 映射+日志记录） |
 | `service/LogCleanService.java` | 日志清理服务（各类日志清理业务逻辑） |
-| `task/OrphanFileCleanupTask.java` | 孤儿文件扫描任务 |
-| `task/RecycleBinCleanupTask.java` | 回收站清空任务 |
-| `task/LogCleanupTask.java` | 重构：拆分为多个日志清理 + 任务日志 |
+| `config/DynamicTaskScheduler.java` | 动态任务调度器（SchedulingConfigurer + DB Cron） |
 | `controller/TaskController.java` | 调度中心接口 |
 | `pages/system/FileCenter.tsx` | 文件中心前端页面（重构） |
 | `pages/system/TaskCenter.tsx` | 调度中心前端页面（新建） |
@@ -269,6 +349,8 @@ public class TaskLogService {
 | 文件 | 说明 |
 |------|------|
 | `pages/system/StorageManagement.tsx` | 被 `FileCenter.tsx` 替代 |
+| `task/LogCleanupTask.java` | 被 `DynamicTaskScheduler` + `LogCleanService` 替代 |
+| `config/SchedulingConfig.java` | 被 `DynamicTaskScheduler` 替代（它本身实现了 SchedulingConfigurer） |
 
 ## 七、实施顺序
 
