@@ -85,14 +85,17 @@ general_scaffold_fastapi/
 ### 构建与运行
 
 ```bash
-# 环境管理使用 conda
-conda activate agent
+# 环境管理使用 venv（位于 admin-fastapi/.venv/）
+cd admin-fastapi
+
+# 激活虚拟环境（Windows Git Bash）
+source .venv/Scripts/activate
 
 # 安装依赖
-pip install -r admin-fastapi/requirements.txt
+pip install -r requirements.txt
 
 # 开发运行
-cd admin-fastapi && uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 
 # OpenAPI 文档
 # http://localhost:8000/swagger-ui.html

@@ -5,7 +5,10 @@
 ## 构建与运行命令
 
 ```bash
-# 安装依赖（conda 环境已由用户管理）
+# 激活虚拟环境（Windows Git Bash）
+source .venv/Scripts/activate
+
+# 安装依赖
 pip install -r requirements.txt
 
 # 开发模式运行
