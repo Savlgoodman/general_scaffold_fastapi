@@ -66,9 +66,9 @@ async def do_login(dto: LoginDTO, db: AsyncSession, ip: str, user_agent: str) ->
         await _record_login_log(db, username, "disabled", ip, user_agent, "账户已被禁用")
         raise BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被禁用")
 
-    # 验证密码（passlib bcrypt 兼容 Java BCrypt）
-    from passlib.hash import bcrypt
-    if not bcrypt.verify(dto.password, user.password):
+    # 验证密码（bcrypt 直接调用，兼容 Java BCrypt）
+    import bcrypt as _bcrypt
+    if not _bcrypt.checkpw(dto.password.encode("utf-8"), user.password.encode("utf-8")):
         await _record_login_log(db, username, "failed", ip, user_agent, "密码错误")
         await _increment_login_fail_count(username)
         raise BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误")
