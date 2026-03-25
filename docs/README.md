@@ -72,6 +72,7 @@
 - [DESIGN_ONLINE_USER_SESSION_MANAGEMENT.md](./DESIGN_ONLINE_USER_SESSION_MANAGEMENT.md) — 在线用户会话管理：Refresh 心跳检测、强制下线、Redis 会话存储
 - [DESIGN_SYSTEM_CONFIG.md](./DESIGN_SYSTEM_CONFIG.md) — 系统设置功能：KV 配置表、站点品牌/安全策略/外观设置、公开配置接口
 - [DESIGN_FASTAPI_REWRITE_FEASIBILITY.md](./DESIGN_FASTAPI_REWRITE_FEASIBILITY.md) — FastAPI 重构可行性分析：技术栈映射、模块迁移复杂度、工作量估算
+- [DESIGN_FASTAPI_REWRITE_PLAN.md](./DESIGN_FASTAPI_REWRITE_PLAN.md) — FastAPI 重构总体实施方案：目录结构、技术栈、分阶段计划、OpenAPI 对齐、代码规范
 - [DESIGN_FILE_CENTER_AND_TASK_SCHEDULER.md](./DESIGN_FILE_CENTER_AND_TASK_SCHEDULER.md) — 文件中心+调度中心：回收站、孤儿文件检测、定时任务、执行日志
 
 ---

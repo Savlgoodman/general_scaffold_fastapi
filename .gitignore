@@ -62,7 +62,23 @@ admin-backend/src/main/resources/application-local.properties
 admin-backend/src/main/resources/application-dev.yml
 admin-backend/src/main/resources/application-test.yml
 
+# Python / FastAPI
+admin-fastapi/__pycache__/
+admin-fastapi/**/__pycache__/
+admin-fastapi/.venv/
+admin-fastapi/venv/
+admin-fastapi/.env
+admin-fastapi/.env.local
+admin-fastapi/dist/
+admin-fastapi/*.egg-info/
+*.py[cod]
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
 # Logs
 /logs/
 admin-backend/logs/
+admin-fastapi/logs/
 *.log
