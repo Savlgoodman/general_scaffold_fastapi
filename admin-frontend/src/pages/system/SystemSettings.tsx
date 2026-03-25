@@ -167,7 +167,7 @@ export default function SystemSettings() {
       formData.append('file', file)
       const res = await AXIOS_INSTANCE.post('/api/admin/files/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        params: { directory: 'system' },
+        params: { category: 'config' },
       })
       if (res.data?.code === 200 && res.data?.data?.url) {
         handleChange(key, res.data.data.url)

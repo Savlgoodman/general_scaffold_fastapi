@@ -51,9 +51,9 @@ public class MinioUtils {
     }
 
     /**
-     * 判断是否为公开读目录（头像目录公开，不需要 presigned）
+     * 判断是否为公开读目录（avatars/ 和 config/ 公开，不需要 presigned）
      */
     public boolean isPublicPath(String objectName) {
-        return objectName != null && objectName.startsWith("avatars/");
+        return objectName != null && (objectName.startsWith("avatars/") || objectName.startsWith("config/"));
     }
 }

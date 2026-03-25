@@ -38,7 +38,7 @@ public class MinIOConfig {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
                 log.info("MinIO 默认桶 '{}' 创建成功", bucketName);
             }
-            // 仅 avatars/ 目录公开读（头像需要长期 URL），其他目录私有用 presigned URL
+            // avatars/ 和 config/ 目录公开读（需要长期有效 URL），其他目录私有用 presigned URL
             String policy = """
                 {
                   "Version": "2012-10-17",
@@ -47,11 +47,14 @@ public class MinIOConfig {
                       "Effect": "Allow",
                       "Principal": {"AWS": ["*"]},
                       "Action": ["s3:GetObject"],
-                      "Resource": ["arn:aws:s3:::%s/avatars/*"]
+                      "Resource": [
+                        "arn:aws:s3:::%s/avatars/*",
+                        "arn:aws:s3:::%s/config/*"
+                      ]
                     }
                   ]
                 }
-                """.formatted(bucketName);
+                """.formatted(bucketName, bucketName);
             client.setBucketPolicy(
                 SetBucketPolicyArgs.builder()
                     .bucket(bucketName)
