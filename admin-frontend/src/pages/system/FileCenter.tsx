@@ -120,6 +120,19 @@ export default function FileCenter() {
     } catch { toast({ title: '操作失败', variant: 'destructive' }) }
   }
 
+  const handleRestoreAll = async () => {
+    let count = 0
+    for (const f of recycleFiles) {
+      if (!f.id) continue
+      try {
+        const res = await filesApi.restoreFile(f.id)
+        if (res.code === 200) count++
+      } catch { /* skip */ }
+    }
+    toast({ title: `已还原 ${count} 个文件` })
+    fetchFiles(); fetchRecycle()
+  }
+
   const handleRestore = async (id: number) => {
     try {
       const res = await filesApi.restoreFile(id)
@@ -246,9 +259,16 @@ export default function FileCenter() {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">回收站</CardTitle>
-                <Button variant="outline" size="sm" onClick={fetchRecycle} disabled={recycleLoading}>
-                  <RefreshCw className={`w-4 h-4 mr-1.5 ${recycleLoading ? 'animate-spin' : ''}`} />刷新
-                </Button>
+                <div className="flex items-center gap-2">
+                  {recycleFiles.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={handleRestoreAll}>
+                      <Undo2 className="w-4 h-4 mr-1.5" />全部还原
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={fetchRecycle} disabled={recycleLoading}>
+                    <RefreshCw className={`w-4 h-4 mr-1.5 ${recycleLoading ? 'animate-spin' : ''}`} />刷新
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">

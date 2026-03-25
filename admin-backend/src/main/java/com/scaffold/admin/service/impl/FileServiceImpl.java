@@ -6,6 +6,8 @@ import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminFileMapper;
 import com.scaffold.admin.mapper.AdminUserMapper;
+import com.scaffold.admin.mapper.SystemConfigMapper;
+import com.scaffold.admin.model.entity.SystemConfig;
 import com.scaffold.admin.model.entity.AdminFile;
 import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.model.vo.FileUploadVO;
@@ -41,6 +43,7 @@ public class FileServiceImpl implements FileService {
     private final MinioClient minioClient;
     private final AdminFileMapper fileMapper;
     private final AdminUserMapper userMapper;
+    private final SystemConfigMapper systemConfigMapper;
 
     @Value("${minio.endpoint}")
     private String endpoint;
@@ -179,7 +182,14 @@ public class FileServiceImpl implements FileService {
         );
         users.forEach(u -> usedUrls.add(u.getAvatar()));
 
-        // TODO: 后续可扫描 admin_notice.content 中的图片链接、admin_system_config 的 logo/favicon
+        // 系统配置中的图片（logo/favicon/背景图）
+        List<SystemConfig> imageConfigs = systemConfigMapper.selectList(
+            new LambdaQueryWrapper<SystemConfig>()
+                .in(SystemConfig::getConfigKey, List.of("site_logo", "site_favicon", "login_bg_image"))
+                .isNotNull(SystemConfig::getConfigValue)
+                .ne(SystemConfig::getConfigValue, "")
+        );
+        imageConfigs.forEach(c -> usedUrls.add(c.getConfigValue()));
 
         // 3. 找出孤儿文件
         int orphanCount = 0;

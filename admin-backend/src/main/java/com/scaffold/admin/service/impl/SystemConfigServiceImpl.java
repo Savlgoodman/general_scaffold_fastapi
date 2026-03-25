@@ -10,7 +10,9 @@ import com.scaffold.admin.model.entity.SystemConfig;
 import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.model.vo.SystemConfigGroupVO;
 import com.scaffold.admin.model.vo.SystemConfigItemVO;
+import com.scaffold.admin.mapper.AdminFileMapper;
 import com.scaffold.admin.mapper.SystemConfigMapper;
+import com.scaffold.admin.model.entity.AdminFile;
 import com.scaffold.admin.service.SystemConfigService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,6 +38,12 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     private final SystemConfigMapper systemConfigMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final AdminFileMapper adminFileMapper;
+
+    /** 图片类型配置项，更新时需要回收旧文件 */
+    private static final Set<String> IMAGE_CONFIG_KEYS = Set.of(
+        "site_logo", "site_favicon", "login_bg_image"
+    );
 
     /**
      * 公开配置白名单
@@ -123,7 +131,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
                 throw new BusinessException(ResultCode.NOT_FOUND, "配置项不存在: " + entry.getConfigKey());
             }
 
-            existing.setConfigValue(entry.getConfigValue());
+            // 图片配置项更新时回收旧文件
+            String oldValue = existing.getConfigValue();
+            String newValue = entry.getConfigValue();
+            if (IMAGE_CONFIG_KEYS.contains(entry.getConfigKey())
+                && oldValue != null && !oldValue.isBlank()
+                && !oldValue.equals(newValue)) {
+                recycleFileByUrl(oldValue);
+            }
+
+            existing.setConfigValue(newValue);
             systemConfigMapper.updateById(existing);
 
             // 清除单项缓存
@@ -151,5 +168,18 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
         stringRedisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), CACHE_TTL_HOURS, TimeUnit.HOURS);
         return config.getConfigValue();
+    }
+
+    private void recycleFileByUrl(String url) {
+        List<AdminFile> files = adminFileMapper.selectList(
+            new LambdaQueryWrapper<AdminFile>()
+                .eq(AdminFile::getUrl, url)
+                .eq(AdminFile::getStatus, "active")
+        );
+        for (AdminFile f : files) {
+            f.setStatus("recycled");
+            f.setDeletedAt(java.time.LocalDateTime.now());
+            adminFileMapper.updateById(f);
+        }
     }
 }
