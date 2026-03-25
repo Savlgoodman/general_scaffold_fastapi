@@ -13,7 +13,7 @@
 | **数据库不动** | 复用现有 PostgreSQL 表结构，SQLAlchemy 模型映射到已有表，不改字段名/类型 |
 | **API 契约不变** | 所有接口路径、请求参数、响应格式与 Java 版完全一致 |
 | **前端零改动** | 只需将 orval 指向新后端的 `/api-docs`，重新 `npm run generate:api` |
-| **��码兼容** | 使用 `passlib[bcrypt]` 兼容 Java BCrypt 加密的密码，用户无需重置 |
+| **密码兼容** | 使用 `passlib[bcrypt]` 兼容 Java BCrypt 加密的密码，用户无需重置 |
 | **Redis Key 兼容** | 保持 Java 版相同的 Redis Key 前缀和 TTL，支持平滑切换 |
 
 ### 1.2 后端适配前端策略
@@ -47,7 +47,7 @@ admin-fastapi/
 │   │
 │   ├── models/                    # SQLAlchemy ORM 模型（对应 entity/）
 │   │   ├── __init__.py
-│   │   ├── base.py                # Base 声明���类 + 公���字段 mixin
+│   │   ├── base.py                # Base 声明基类 + 公共字段 mixin
 │   │   ├── user.py                # AdminUser
 │   │   ├── role.py                # AdminRole
 │   │   ├── permission.py          # AdminPermission
@@ -195,7 +195,7 @@ dependencies = [
 
     # 工具
     "python-multipart>=0.0.9",   # 文件上传支持
-    "httpx>=0.27.0",             # HTTP 客户端（测试/内部��用）
+    "httpx>=0.27.0",             # HTTP 客户端（测试/内部调用）
 ]
 
 [project.optional-dependencies]
@@ -544,7 +544,7 @@ class CreateRoleDTO(BaseModel):
     name: str = Field(..., description="角色名称")
     code: str = Field(..., description="角色编码（唯一）")
     description: str | None = Field(None, description="角色描述")
-    status: int = Field(1, description="���态：1-启用，0-禁用")
+    status: int = Field(1, description="状态：1-启用，0-禁用")
 ```
 
 ### 7.4 响应模型声明
@@ -707,7 +707,7 @@ async def create_user(request: Request, dto: CreateAdminUserDTO, db: AsyncSessio
 
 ## 10. OpenAPI 对齐检查清单
 
-每个 Router ��现完成后，必须逐一对照检查：
+每个 Router 实现完成后，必须逐一对照检查：
 
 - [ ] 路径完全一致（如 `/api/admin/roles/{id}` 不是 `/api/admin/roles/{role_id}`）
 - [ ] HTTP 方法一致
