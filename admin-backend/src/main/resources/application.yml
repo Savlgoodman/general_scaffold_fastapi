@@ -85,6 +85,11 @@ app:
   log:
     store-response-body: false
     api-log-retention-days: 30
+    operation-log-retention-days: 90
+    login-log-retention-days: 90
+    error-log-retention-days: 60
+  file:
+    recycle-bin-retention-days: 7
 
 logging:
   config: classpath:logback-spring.xml
