@@ -5,7 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { Sun, Moon, Coffee, Monitor, Bell, Layout } from 'lucide-react'
+import { Sun, Moon, Coffee, Monitor, Bell } from 'lucide-react'
 import { useThemeStore } from '@/store/theme'
 import { usePreferencesStore } from '@/store/preferences'
 
@@ -13,7 +13,6 @@ export default function Settings() {
   const { theme, setTheme } = useThemeStore()
   const {
     showHeaderNotice, setShowHeaderNotice,
-    showDashboardNotice, setShowDashboardNotice,
     noticeSpeed, setNoticeSpeed,
     sidebarCollapsed, setSidebarCollapsed,
   } = usePreferencesStore()
@@ -96,15 +95,6 @@ export default function Settings() {
             </Select>
           </div>
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-sm font-medium">Dashboard 公告区</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">在仪表盘显示公告通知卡片</p>
-            </div>
-            <Switch checked={showDashboardNotice} onCheckedChange={setShowDashboardNotice} />
-          </div>
         </CardContent>
       </Card>
 

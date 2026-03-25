@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone } from "lucide-react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone, Eraser } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
 import { useAuthStore } from "@/store/auth"
+import { usePreferencesStore, NOTICE_SPEED_MAP } from "@/store/preferences"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { getNotices } from "@/api/generated/notices/notices"
 import type { AdminNotice } from "@/api/generated/model"
 import {
@@ -30,6 +35,7 @@ const noticesApi = getNotices()
 function NoticeMarquee() {
   const [notices, setNotices] = useState<AdminNotice[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const { showHeaderNotice, noticeSpeed } = usePreferencesStore()
 
   useEffect(() => {
     noticesApi.listNotices({ pageNum: 1, pageSize: 10, status: 'published', type: 'notice' })
@@ -44,12 +50,15 @@ function NoticeMarquee() {
   useEffect(() => {
     if (notices.length <= 1) return
     const current = notices[currentIndex]
-    const delay = current?.isTop === 1 ? 10000 : 5000
+    const baseDelay = NOTICE_SPEED_MAP[noticeSpeed]
+    const delay = current?.isTop === 1 ? baseDelay * 2 : baseDelay
     const timer = setTimeout(() => {
       setCurrentIndex(i => (i + 1) % notices.length)
     }, delay)
     return () => clearTimeout(timer)
-  }, [notices, currentIndex])
+  }, [notices, currentIndex, noticeSpeed])
+
+  if (!showHeaderNotice) return null
 
   if (notices.length === 0) return null
 
@@ -75,6 +84,107 @@ function NoticeMarquee() {
         }
       `}</style>
     </div>
+  )
+}
+
+function NotificationBell() {
+  const [notices, setNotices] = useState<AdminNotice[]>([])
+  const [detail, setDetail] = useState<AdminNotice | null>(null)
+  const { readNoticeIds, markNoticeRead, markAllNoticesRead } = usePreferencesStore()
+
+  useEffect(() => {
+    noticesApi.listNotices({ pageNum: 1, pageSize: 20, status: 'published' })
+      .then(res => {
+        if (res.code === 200 && res.data?.records) setNotices(res.data.records)
+      })
+      .catch(() => {})
+  }, [])
+
+  const unreadCount = notices.filter(n => n.id && !readNoticeIds.includes(n.id)).length
+
+  // 排序：未读优先，同组内按时间倒序
+  const sorted = [...notices].sort((a, b) => {
+    const aRead = a.id ? readNoticeIds.includes(a.id) : true
+    const bRead = b.id ? readNoticeIds.includes(b.id) : true
+    if (aRead !== bRead) return aRead ? 1 : -1
+    return (b.publishTime ?? '').localeCompare(a.publishTime ?? '')
+  })
+
+  const handleClick = (n: AdminNotice) => {
+    if (n.type === 'announcement') {
+      // 公告：弹出详情弹窗，标记已读
+      setDetail(n)
+      if (n.id) markNoticeRead(n.id)
+    } else {
+      // 通知：直接标记已读
+      if (n.id) markNoticeRead(n.id)
+    }
+  }
+
+  return (
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-80 p-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b">
+            <span className="text-sm font-medium">通知 ({unreadCount} 未读)</span>
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="icon" className="size-7" title="全部已读" onClick={() => markAllNoticesRead(notices.map(n => n.id!).filter(Boolean))}>
+                <Eraser className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {notices.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">暂无通知</div>
+            ) : sorted.map(n => {
+              const isRead = n.id ? readNoticeIds.includes(n.id) : true
+              return (
+                <div
+                  key={n.id}
+                  className={`flex items-start gap-3 px-4 py-2.5 hover:bg-muted/50 cursor-pointer transition-colors ${isRead ? 'opacity-50' : ''}`}
+                  onClick={() => handleClick(n)}
+                >
+                  <div className={`mt-1.5 size-2 rounded-full shrink-0 ${isRead ? 'bg-transparent' : 'bg-primary'}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm truncate">{n.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{n.publishTime?.substring(0, 10)}</div>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0">{n.type === 'notice' ? '通知' : '公告'}</Badge>
+                </div>
+              )
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* 公告详情弹窗 */}
+      <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{detail?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Badge variant="outline">公告</Badge>
+              <span>{detail?.publishTime?.replace('T', ' ').substring(0, 19)}</span>
+            </div>
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{detail?.content ?? ''}</ReactMarkdown>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -169,9 +279,7 @@ function Header() {
           </DropdownMenu>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon">
-            <Bell className="size-4" />
-          </Button>
+          <NotificationBell />
         </div>
 
         <div className="w-px h-6 bg-border mx-2" />

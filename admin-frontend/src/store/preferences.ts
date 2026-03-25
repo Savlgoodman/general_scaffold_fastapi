@@ -6,7 +6,6 @@ type NoticeSpeed = 'slow' | 'normal' | 'fast'
 interface PreferencesState {
   // 通知偏好
   showHeaderNotice: boolean
-  showDashboardNotice: boolean
   noticeSpeed: NoticeSpeed
 
   // 布局偏好
@@ -17,7 +16,6 @@ interface PreferencesState {
 
   // Actions
   setShowHeaderNotice: (v: boolean) => void
-  setShowDashboardNotice: (v: boolean) => void
   setNoticeSpeed: (v: NoticeSpeed) => void
   setSidebarCollapsed: (v: boolean) => void
   markNoticeRead: (id: number) => void
@@ -36,13 +34,11 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set, get) => ({
       showHeaderNotice: true,
-      showDashboardNotice: true,
       noticeSpeed: 'normal',
       sidebarCollapsed: false,
       readNoticeIds: [],
 
       setShowHeaderNotice: (v) => set({ showHeaderNotice: v }),
-      setShowDashboardNotice: (v) => set({ showDashboardNotice: v }),
       setNoticeSpeed: (v) => set({ noticeSpeed: v }),
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
 
