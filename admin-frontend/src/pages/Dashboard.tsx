@@ -85,7 +85,7 @@ function useStatData<T>(fetcher: () => Promise<{ code?: number; data?: T }>) {
 const overviewCards = [
   { key: "totalUsers" as const, title: "用户总数", icon: Users, sub: (d: StatOverviewVO) => `${d.activeUsers ?? 0} 活跃` },
   { key: "onlineUsers" as const, title: "在线用户", icon: Activity, sub: () => "当前在线" },
-  { key: "todayLoginSuccess" as const, title: "今��登录", icon: LogIn, sub: (d: StatOverviewVO) => `${d.todayLoginFailed ?? 0} 次失败` },
+  { key: "todayLoginSuccess" as const, title: "今日登录", icon: LogIn, sub: (d: StatOverviewVO) => `${d.todayLoginFailed ?? 0} 次失败` },
   { key: "todayErrors" as const, title: "今日错误", icon: AlertCircle, sub: () => "异常数量" },
 ]
 
@@ -395,14 +395,14 @@ function RecentLoginsCard() {
   if (!visible) return null
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">最近登录</CardTitle>
           <Clock className="size-4 text-muted-foreground" />
         </div>
       </CardHeader>
-      <CardContent className="p-6 pt-0">
+      <CardContent className="p-6 pt-0 flex-1 min-h-0">
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -417,7 +417,7 @@ function RecentLoginsCard() {
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
             {(data ?? []).map((login, i) => (
               <div key={i} className="flex items-center gap-3">
                 <Avatar className="size-8">
