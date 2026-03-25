@@ -312,6 +312,7 @@ export default function FileCenter() {
                         <TableCell className="text-center py-2.5 text-sm">{f.deletedAt?.replace('T', ' ').substring(0, 19)}</TableCell>
                         <TableCell className="text-center py-2.5">
                           <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="详情" onClick={() => setDetailFile(f)}><Eye className="w-3.5 h-3.5" /></Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" title="恢复" onClick={() => f.id && handleRestore(f.id)}><Undo2 className="w-3.5 h-3.5" /></Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" title="彻底删除" onClick={() => setDeleteTarget(f)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                           </div>

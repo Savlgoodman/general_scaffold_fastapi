@@ -106,7 +106,10 @@ public class FileServiceImpl implements FileService {
         LambdaQueryWrapper<AdminFile> query = new LambdaQueryWrapper<AdminFile>()
             .eq(AdminFile::getStatus, "recycled")
             .orderByDesc(AdminFile::getDeletedAt);
-        return fileMapper.selectPage(page, query); // 回收站不生成 URL
+        Page<AdminFile> result = fileMapper.selectPage(page, query);
+        // 回收站也生成短期 presigned URL 供管理员预览
+        fillPresignedUrlsForRecycle(result.getRecords());
+        return result;
     }
 
     // ==================== 回收站操作 ====================
@@ -317,6 +320,19 @@ public class FileServiceImpl implements FileService {
                 // 公开目录，url 已在上传时写入 DB
             } else if (file.getObjectName() != null) {
                 file.setUrl(minioUtils.getPresignedUrl(file.getObjectName()));
+            }
+        }
+    }
+
+    /** 为回收站文件生成短期 presigned URL（供管理员预览） */
+    private void fillPresignedUrlsForRecycle(List<AdminFile> files) {
+        for (AdminFile file : files) {
+            if (file.getObjectName() != null) {
+                if (minioUtils.isPublicPath(file.getObjectName())) {
+                    // 公开目录直接用 DB 中的 URL
+                } else {
+                    file.setUrl(minioUtils.getPresignedUrl(file.getObjectName()));
+                }
             }
         }
     }
