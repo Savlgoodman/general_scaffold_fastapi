@@ -25,8 +25,8 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { getMenus } from '@/api/generated/menus/menus'
-import type { MenuVO } from '@/api/generated/model'
+import { getMenus } from '@/api/javaedition/menus/menus'
+import type { MenuVO } from '@/api/javaedition/model'
 
 const menusApi = getMenus()
 

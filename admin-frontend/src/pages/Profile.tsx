@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useToast } from '@/hooks/use-toast'
 import { Camera, Save } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
-import { getAdminUsers } from '@/api/generated/admin-users/admin-users'
+import { getAdminUsers } from '@/api/javaedition/admin-users/admin-users'
 import { AXIOS_INSTANCE } from '@/api/custom-instance'
 import AvatarCropDialog from '@/components/AvatarCropDialog'
 

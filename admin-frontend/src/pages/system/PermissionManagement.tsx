@@ -12,8 +12,8 @@ import {
   Search, RefreshCw, FolderOpen, FileText, ChevronDown, ChevronRight,
   Eye, CircleCheck, CircleX,
 } from 'lucide-react'
-import { getPermissions } from '@/api/generated/permissions/permissions'
-import type { PermissionGroupVO, PermissionBaseVO } from '@/api/generated/model'
+import { getPermissions } from '@/api/javaedition/permissions/permissions'
+import type { PermissionGroupVO, PermissionBaseVO } from '@/api/javaedition/model'
 
 const permissionsApi = getPermissions()
 

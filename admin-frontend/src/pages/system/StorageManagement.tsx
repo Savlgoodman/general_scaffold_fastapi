@@ -12,12 +12,12 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, RefreshCw, Trash2, Eye, FolderOpen, FileText, Image, Copy, ExternalLink } from 'lucide-react'
-import { getFiles } from '@/api/generated/files/files'
-import type { BucketFileVO } from '@/api/generated/model'
+import { getFiles } from '@/api/javaedition/files/files'
+import type { BucketFileVO } from '@/api/javaedition/model'
 import { AXIOS_INSTANCE } from '@/api/custom-instance'
 import { TableSkeleton } from '@/components/skeletons'
 
-// 后端 BucketFileVO 含 url 字段，但 generated 类型未更新，扩展补齐
+// 后端 BucketFileVO 含 url 字段，但 javaedition 类型未更新，扩展补齐
 type FileVO = BucketFileVO & { url?: string }
 
 const filesApi = getFiles()

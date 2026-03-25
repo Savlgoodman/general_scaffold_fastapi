@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { RefreshCw, Cpu, MemoryStick, HardDrive, Database, Server, Activity } from 'lucide-react'
-import { getSystemMonitor } from '@/api/generated/system-monitor/system-monitor'
-import type { SystemInfoVO } from '@/api/generated/model'
+import { getSystemMonitor } from '@/api/javaedition/system-monitor/system-monitor'
+import type { SystemInfoVO } from '@/api/javaedition/model'
 import { CardGroupSkeleton } from '@/components/skeletons'
 
 const monitorApi = getSystemMonitor()
