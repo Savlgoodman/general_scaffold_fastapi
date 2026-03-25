@@ -13,9 +13,9 @@ import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.model.vo.FileUploadVO;
 import com.scaffold.admin.service.FileService;
 import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
+import com.scaffold.admin.util.MinioUtils;
 import com.scaffold.admin.util.SecurityUtils;
 import io.minio.*;
-import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +42,7 @@ public class FileServiceImpl implements FileService {
     );
 
     private final MinioClient minioClient;
+    private final MinioUtils minioUtils;
     private final AdminFileMapper fileMapper;
     private final AdminUserMapper userMapper;
     private final SystemConfigMapper systemConfigMapper;
@@ -289,8 +290,8 @@ public class FileServiceImpl implements FileService {
         fileMapper.insert(adminFile);
 
         FileUploadVO vo = new FileUploadVO();
-        // 头像用公开直链（长期有效），其他用 presigned URL（2 小时有效）
-        vo.setUrl("avatar".equals(category) ? storageUrl : getPresignedUrl(objectName));
+        // 头像用公开直链（长期有效），其他用 presigned URL（5 分钟有效）
+        vo.setUrl(minioUtils.isPublicPath(objectName) ? storageUrl : minioUtils.getPresignedUrl(objectName));
         vo.setObjectName(objectName);
         vo.setFileName(originalName);
         vo.setSize(file.getSize());
@@ -307,33 +308,15 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-    /** 生成 presigned URL（默认 2 小时有效） */
-    private String getPresignedUrl(String objectName) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .bucket(bucketName)
-                    .object(objectName)
-                    .method(Method.GET)
-                    .expiry(7200) // 2小时
-                    .build()
-            );
-        } catch (Exception e) {
-            log.error("生成 presigned URL 失败: {}", objectName, e);
-            return null;
-        }
-    }
-
-    /** 为文件列表填充访问 URL：avatar 用公开直链，其他用 presigned URL */
+    /** 为文件列表填充访问 URL：公开目录用直链，其他用 presigned URL */
     private void fillPresignedUrls(List<AdminFile> files) {
         for (AdminFile file : files) {
             if (!"active".equals(file.getStatus())) {
-                file.setUrl(null); // 回收站/已删除文件不生成 URL
-            } else if ("avatar".equals(file.getCategory())) {
-                // 头像目录是公开读的，直接用存储 URL
-                // url 已在上传时写入 DB，不需要替换
+                file.setUrl(null);
+            } else if (minioUtils.isPublicPath(file.getObjectName())) {
+                // 公开目录，url 已在上传时写入 DB
             } else if (file.getObjectName() != null) {
-                file.setUrl(getPresignedUrl(file.getObjectName()));
+                file.setUrl(minioUtils.getPresignedUrl(file.getObjectName()));
             }
         }
     }
