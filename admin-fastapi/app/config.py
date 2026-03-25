@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # 数据库（对应 Java application-dev.yml 的 database.*）
     db_host: str = "localhost"
     db_port: int = 5432
-    db_name: str = "scaffold_spring_dev"
+    db_name: str = "scaffold_fastapi_dev"
     db_username: str = "postgres"
     db_password: str = ""
     db_pool_size: int = 20

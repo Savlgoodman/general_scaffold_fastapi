@@ -2,24 +2,202 @@
 
 本文件为 Claude Code 提供项目级开发指导。
 
+## 项目概况
+
+本项目正在将 Java Spring Boot 后端重构为 Python FastAPI，**前端保持不变**。
+
+### 当前状态
+
+- `admin-backend/` — Java Spring Boot 后端（**参考实现，不再修改**）
+- `admin-fastapi/` — Python FastAPI 后端（**当前开发重点**）
+- `admin-frontend/` — React 前端（TypeScript, Vite, shadcn/ui, Tailwind CSS）
+
+### 重构核心约束
+
+| 约束 | 说明 |
+|------|------|
+| **数据库不动** | 使用独立数据库 `scaffold_fastapi_dev`（从 Java 版迁移表结构），SQLAlchemy 映射到已有表 |
+| **API 契约不变** | 路径、参数、响应格式与 Java 版完全一致 |
+| **前端零改动** | orval 指向新后端 `/api-docs`，重新生成即可 |
+| **密码兼容** | `passlib[bcrypt]` 兼容 Java BCrypt 密码 |
+| **Redis Key 兼容** | Key 前缀、TTL 与 Java 版一致 |
+
+---
+
 ## 项目结构
 
 ```
-general_scaffold_spring/
-├── admin-backend/       # Spring Boot 后端（Java 17, MyBatis-Plus, PostgreSQL）
-├── admin-frontend/      # React 前端（TypeScript, Vite, shadcn/ui, Tailwind CSS）
+general_scaffold_fastapi/
+├── admin-backend/       # Java Spring Boot 后端（参考实现，只读）
+├── admin-fastapi/       # Python FastAPI 后端（开发重点）
+│   ├── app/
+│   │   ├── main.py              # 入口：中间件/路由/异常处理
+│   │   ├── config.py            # Pydantic Settings 配置
+│   │   ├── common/              # 公共组件（R/ResultCode/异常/分页/Redis Key/安全常量）
+│   │   ├── models/              # SQLAlchemy ORM 模型（17 个实体）
+│   │   ├── schemas/             # Pydantic 模型（DTO + VO）
+│   │   ├── routers/             # API 路由（对应 Java Controller）
+│   │   ├── services/            # 业务逻辑层（对应 Java ServiceImpl）
+│   │   ├── security/            # JWT/认证/权限
+│   │   ├── middleware/          # HTTP 中间件（API 日志/CORS）
+│   │   ├── decorators/          # 装饰器（操作审计）
+│   │   ├── db/                  # 数据库/Redis 连接
+│   │   └── utils/               # 工具类
+│   ├── alembic/                 # 数据库迁移
+│   ├── requirements.txt
+│   └── .env                     # 环境配置（git 忽略）
+├── admin-frontend/      # React 前端（不修改）
+├── docs/                # 项目文档
+└── CLAUDE.md            # 本文件
 ```
 
-后端和前端各有独立的 `CLAUDE.md`，包含各自的构建命令和架构细节。
+---
+
+## 重构实施计划（分 6 阶段）
+
+详见 [docs/DESIGN_FASTAPI_REWRITE_PLAN.md](./docs/DESIGN_FASTAPI_REWRITE_PLAN.md)
+
+### Phase 1：项目骨架与基础设施 ✅ 已完成
+- 目录结构、配置管理、数据库/Redis 连接、17 个 ORM 模型、统一响应、全局异常处理、CORS、Health 端点
+
+### Phase 2：认证安全体系（当前阶段）
+- JWT Provider（生成/验证/黑名单）
+- 验证码（`easy-captcha-python`，用法见 `docs/EASYCAPTCHA-PYTHON-USAGE.md`）
+- Auth Router（登录/登出/刷新/获取当前用户/头像上传）
+- JWT 认证中间件 + RBAC 权限依赖
+
+### Phase 3：核心 CRUD 模块
+- 用户/角色/权限/菜单管理，用户权限覆写
+
+### Phase 4：日志与审计
+- API 日志中间件、操作审计装饰器、异常日志、登录日志、日志查询 Router
+
+### Phase 5：辅助功能模块
+- 通知公告、文件管理（MinIO）、系统配置、系统监控、仪表盘统计、在线用户、定时任务
+
+### Phase 6：联调验证与切换
+- API 契约对比、orval 重新生成、前端引用替换、回归测试
+
+---
+
+## FastAPI 后端开发规范
+
+### 构建与运行
+
+```bash
+# 环境管理使用 conda
+conda activate agent
+
+# 安装依赖
+pip install -r admin-fastapi/requirements.txt
+
+# 开发运行
+cd admin-fastapi && uvicorn app.main:app --reload --port 8000
+
+# OpenAPI 文档
+# http://localhost:8000/swagger-ui.html
+# http://localhost:8000/api-docs（JSON，供 orval 消费）
+```
+
+### 分层原则（严格执行）
+
+| 层级 | 目录 | 职责 | 禁止 |
+|------|------|------|------|
+| Router | `routers/` | 接收参数 → 调 Service → 返回结果 | 业务逻辑、直接查数据库 |
+| Service | `services/` | 业务逻辑、事务管理 | 直接返回 HTTP 响应 |
+| Model | `models/` | ORM 映射 | 业务逻辑 |
+| Schema | `schemas/` | 请求/响应校验 | 业务逻辑 |
+
+### 命名规范
+
+| 对象 | 规范 | 示例 |
+|------|------|------|
+| 文件名 | snake_case | `user_service.py` |
+| 类名 | PascalCase | `AdminUserService` |
+| 函数/方法 | snake_case | `create_user()` |
+| 常量 | UPPER_SNAKE | `TOKEN_BLACKLIST` |
+| Pydantic Schema | PascalCase + 后缀 | `CreateRoleDTO` / `RoleBaseVO` |
+| SQLAlchemy Model | PascalCase | `AdminUser` → `__tablename__ = "admin_user"` |
+
+### OpenAPI 对齐要点（前端兼容关键）
+
+1. **路径完全一致**：如 `/api/admin/roles/{id}` 不能写成 `/{role_id}`
+2. **operation_id 一致**：`operation_id="listRoles"` 对应 Java `@Operation(operationId="listRoles")`
+3. **tags 一致**：`tags=["Roles"]` 对应 Java `@Tag(name="Roles")`
+4. **Query 参数名一致**：`pageNum` 不是 `page_num`（使用 FastAPI `Query(alias="pageNum")`）
+5. **JSON 字段名驼峰**：Pydantic 使用 `alias_generator` 将 snake_case → camelCase
+6. **分页字段名一致**：`records` / `total` / `size` / `current`
+
+### 驼峰命名兼容
+
+```python
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+class CamelModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+```
+
+### 异常处理规范
+
+- **Router 层禁止 try-catch**
+- **Service 层抛 `BusinessException`**：`raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")`
+- **全局异常处理器统一兜底**（`app/main.py` 中已注册）
+- **安全原则**：错误信息不透传内部实现细节
+
+### 逻辑删除
+
+```python
+# 查询：手动加条件
+stmt = select(AdminUser).where(AdminUser.is_deleted == 0)
+
+# 删除：UPDATE 而非 DELETE
+stmt = update(AdminUser).where(AdminUser.id == id).values(is_deleted=1)
+```
+
+### 依赖注入
+
+```python
+from fastapi import Depends
+from app.db.session import get_db
+from app.security.security_utils import get_current_user
+
+@router.get("/me")
+async def me(
+    db: AsyncSession = Depends(get_db),
+    user: AdminUser = Depends(get_current_user),
+): ...
+```
+
+### 操作审计
+
+所有 CUD Service 方法使用 `@operation_log` 装饰器：
+
+```python
+@operation_log(module="用户管理", op_type="CREATE")
+async def create_user(self, dto, db, request): ...
+```
+
+### 异步规范
+
+- 数据库操作：`async/await`（SQLAlchemy AsyncSession）
+- Redis 操作：`async/await`（redis-py async）
+- 日志写入：`asyncio.create_task()` 异步，不阻塞响应
+- MinIO：`run_in_executor`（官方 SDK 不支持 async）
+
+---
 
 ## 前后端协作开发流程
 
-### 核心流程：后端先行，API 生成驱动前端
+### 核心流程（FastAPI 版）
 
-1. **后端开发接口** — 编写 Controller/Service/VO/DTO，确保所有字段标注 `@Schema` 注解
-2. **后端编译验证** — `mvn compile` 确认无误
-3. **用户生成前端 API** — 等待用户运行 `npm run generate:api`（orval 从 OpenAPI spec 生成），**不要自行运行此命令**
-4. **前端对接** — 使用 `src/api/generated/` 中的函数和类型，直接调用
+1. **后端开发 Router** — 编写 Router/Service/Schema，确保 `operation_id`、`tags`、`Field(description=...)` 完整
+2. **后端启动验证** — `uvicorn app.main:app --reload`，访问 `/api-docs` 确认 OpenAPI JSON 正确
+3. **用户生成前端 API** — 等待用户运行 `npm run generate:api`，**不要自行运行此命令**
+4. **前端对接** — 使用 `src/api/generated/` 中的函数和类型
 
 ### 前端 API 调用规范
 
@@ -28,48 +206,27 @@ general_scaffold_spring/
 - 返回类型是 `R<T>` 包装：`{code, message, data}`，用 `res.code === 200 && res.data` 判断
 - generated 类型所有字段都是 optional（`?`），使用时注意 `?? fallback` 或 `!` 断言
 - 自定义 axios 实例在 `src/api/custom-instance.ts`，已配置 token 注入和 401 自动退出
+- Java 版生成的 API 保留在 `src/api/javaedition/` 作参考
 
-### 后端 OpenAPI 注解要点
+### 前端 API 迁移流程
 
-- Controller 类必须有 `@Tag(name = "英文tag名", description = "...")`
-- 所有 DTO/VO 字段必须有 `@Schema(description = "...")`
-- **内部类命名必须唯一**：不同 VO 中的内部类不能同名（如 `GroupSection`/`Summary`），否则 orval 会合并它们导致类型丢失。命名规范：`{父类前缀}{内部类名}`（如 `UserPermGroupSection`）
-- 确保 `application.yml` 配置 `springdoc.default-produces-media-type: application/json`，否则 orval 会生成 Blob 返回类型
-- **Controller 方法必须添加 `operationId`**：`@Operation(operationId = "listUsers", summary = "...")`，否则 orval 会用数字后缀区分同名方法（如 `getDetail2`、`list1`），命名规范：`{动词}{资源}`（如 `listRoles`、`getUserDetail`、`syncRolePermissions`）
+1. Python 后端某模块完成后，用户重新 `npm run generate:api`
+2. 生成到 `src/api/generated/`
+3. 前端逐步将 `import from '@/api/javaedition/...'` 替换为 `import from '@/api/generated/...'`
+4. 全部替换后删除 `javaedition/`
+
+---
 
 ## 前端路由注册流程
 
 ### 单一数据源：`src/routes.tsx`
 
-所有受保护页面的路由定义在 `admin-frontend/src/routes.tsx` 的 `appRoutes` 数组中。**新增页面只需在此处添加一条**，路由注册和开发者模式菜单同时生效。
-
-```typescript
-// src/routes.tsx
-export const appRoutes: RouteConfig[] = [
-  { path: "/new-page", title: "新页面", icon: "Globe", element: <NewPage /> },
-  // ...
-]
-```
-
-### 消费方
-
-| 文件 | 用途 |
-|------|------|
-| `src/App.tsx` | 遍历 `appRoutes` 注册 React Router 路由 |
-| `src/components/layout/AppSidebar.tsx` | 开发者模式下遍历 `appRoutes` 渲染侧边栏菜单 |
-
-### 新增页面完整步骤
-
-1. 在 `src/pages/` 下创建页面组件
-2. 在 `src/routes.tsx` 的 `appRoutes` 数组中添加一条（path、title、icon、element）
-3. 完成 — 路由自动注册，开发者模式菜单自动出现
-4. （可选）后端 `admin_menu` 表中插入对应菜单记录，分配给角色后普通用户也可见
+所有受保护页面的路由定义在 `admin-frontend/src/routes.tsx` 的 `appRoutes` 数组中。
 
 ### 菜单控制机制
 
-- **超级管理员 + 开发者模式 ON**：侧边栏显示 `appRoutes` 中所有前端路由（扁平列表），不受后端数据库控制
-- **超级管理员 + 开发者模式 OFF / 普通用户**：侧边栏按后端登录接口返回的菜单树渲染（`admin_menu` + `admin_role_menu`）
-- 开发者模式开关在 Header 右上角，仅超级管理员可见
+- **超级管理员 + 开发者模式 ON**：侧边栏显示 `appRoutes` 中所有前端路由
+- **超级管理员 + 开发者模式 OFF / 普通用户**：侧边栏按后端登录接口返回的菜单树渲染
 
 ### Token 刷新机制
 
@@ -78,26 +235,27 @@ export const appRoutes: RouteConfig[] = [
 - 并发请求加锁，只刷新一次，其余排队等待
 - refresh token 也失效时，弹出 toast「登录失效！请重新登录」并跳转登录页
 
+---
+
 ## 关键开发经验
 
-### MyBatis-Plus @TableLogic
+### Java 参考对照
 
-- BaseEntity 的 `isDeleted` 字段有 `@TableLogic` 注解
-- **删除操作使用 `mapper.delete()` / `mapper.deleteById()` / `mapper.deleteBatchIds()` 方法**，让 MyBatis-Plus 自动处理逻辑删除
-- **不要** `setIsDeleted(1)` + `updateById()`，`updateById()` 会忽略 `@TableLogic` 字段的 SET
-- **不要** `LambdaUpdateWrapper.set(::getIsDeleted, 1)` + `mapper.update()`，应改用 `mapper.delete(LambdaQueryWrapper)` 方式
-- 查询时 MyBatis-Plus 已自动加 `is_deleted=0`，不需要手动加
+开发 FastAPI 接口时，对照 Java 版实现确保行为一致：
+
+| 需要对照的内容 | Java 位置 | Python 位置 |
+|---------------|-----------|------------|
+| 接口路径与参数 | `controller/*.java` | `routers/*.py` |
+| 业务逻辑 | `service/impl/*.java` | `services/*.py` |
+| 数据校验 | `model/dto/*.java` | `schemas/*.py` |
+| 响应格式 | `model/vo/*.java` | `schemas/*.py` |
+| 安全过滤 | `security/*.java` | `security/*.py` |
+| Redis Key | `common/RedisKeys.java` | `common/redis_keys.py` |
 
 ### 权限通配符匹配
 
 - `/**` 模式必须匹配前缀路径本身（如 `/api/admin/users/**` 需匹配 `/api/admin/users`）
-- 使用前缀匹配而非正则，避免 `.*` 要求必须有后续路径段的问题
-
-### 权限同步脚本
-
-- `admin-backend/script/sync_permissions_from_openapi.py`
-- 使用 `psycopg2` 直连 PostgreSQL，自动读取 `application-{profile}.yml`
-- `group_key` 格式统一为下划线（如 `admin_users`），不用点分隔
+- 使用前缀匹配而非正则
 
 ### 前端组件规范
 
@@ -105,39 +263,7 @@ export const appRoutes: RouteConfig[] = [
 - 方法标签（GET/POST/PUT/DELETE）使用固定宽度保证对齐
 - 滚动条已全局自定义（`index.css`），`scrollbar-gutter: stable` 防止页面抖动
 
-### API 冗余清理原则
-
-- 当 `sync`（全量同步）接口存在时，`revoke`（批量撤销）接口是冗余的，可以删除
-- 删除后端接口后需同步删除关联的 DTO 类（如 `RevokePermissionsDTO`）
-- 同时检查 Service 接口和实现中是否有方法不再被任何 Controller 调用
-
-### 操作审计日志
-
-- 后端所有 **CUD（增删改）** 类 Service 方法必须标注 `@OperationLog` 注解
-- 新增接口时，判断该操作是否属于需要审计的业务类型（用户/角色/菜单/权限等管理操作），按需添加注解
-- 纯查询接口（GET/列表/详情）不需要标注
-
-```java
-// 示例
-@OperationLog(module = "用户管理", type = OperationType.CREATE)
-public AdminUser createUser(CreateAdminUserDTO dto) { ... }
-
-@OperationLog(module = "角色管理", type = OperationType.DELETE, description = "批量删除")
-public void deleteRoles(List<Long> ids) { ... }
-```
-
-- `module`：业务模块名（中文），如 "用户管理"、"角色管理"、"菜单管理"、"权限管理"
-- `type`：`OperationType.CREATE` / `UPDATE` / `DELETE`
-- `description`：可选补充说明，如 "批量删除"、"同步角色菜单"
-
-### operationId 变更后的前端对接
-
-- 后端添加/修改 `operationId` 后，用户重新生成 API，前端函数名会变化
-- 需要全局搜索旧函数名并替换为新函数名
-- 常见变化模式：`list` → `listRoles`、`getDetail` → `getRoleDetail`、`_delete` → `deleteRole`
-- 修改后运行 `npx tsc --noEmit` 验证无类型错误
-
-
+---
 
 ## 文档编写规范
 
