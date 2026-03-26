@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import traceback
 
@@ -13,8 +14,14 @@ from app.common.response import R
 from app.common.result_code import ResultCode
 from app.config import get_settings
 from app.db.redis import redis_client
-from app.routers import admin_user_permissions, admin_users, auth, health, menus, permissions, roles
+from app.middleware.api_log import ApiLogMiddleware
+from app.routers import (
+    admin_user_permissions, admin_users, api_logs, auth, error_logs,
+    health, login_logs, menus, operation_logs, permissions, roles,
+)
 from app.security.auth_middleware import JwtAuthMiddleware
+from app.services.log_write_service import write_error_log
+from app.utils.ip_utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -26,7 +33,6 @@ async def lifespan(app: FastAPI):
     """启动/关闭时的资源管理"""
     logger.info("admin-fastapi starting up...")
     yield
-    # 关闭 Redis 连接
     await redis_client.aclose()
     logger.info("admin-fastapi shut down.")
 
@@ -42,9 +48,10 @@ app = FastAPI(
 )
 
 
-# ── 中间件（注意：注册顺序与执行顺序相反）─────────────
-# 最后注册的最先执行：CORS → JWT Auth
+# ── 中间件（注册顺序与执行顺序相反）─────────────────────
+# 执行顺序：CORS → API Log → JWT Auth → Router
 app.add_middleware(JwtAuthMiddleware)
+app.add_middleware(ApiLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -81,7 +88,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error("系统异常: %s", traceback.format_exc())
+    tb = traceback.format_exc()
+    logger.error("系统异常: %s", tb)
+
+    # 异步写入异常日志到数据库
+    asyncio.create_task(
+        write_error_log(
+            level="ERROR",
+            exception_class=type(exc).__name__,
+            exception_message=str(exc),
+            stack_trace=tb,
+            request_path=request.url.path,
+            request_method=request.method,
+            request_params=str(request.query_params) if request.query_params else None,
+            user_id=getattr(request.state, "user_id", None),
+            ip=get_client_ip(request),
+        )
+    )
+
     return JSONResponse(
         status_code=200,
         content=R.error(ResultCode.INTERNAL_SERVER_ERROR, "系统内部错误，请稍后重试").model_dump(),
@@ -96,3 +120,7 @@ app.include_router(roles.router)
 app.include_router(permissions.router)
 app.include_router(menus.router)
 app.include_router(admin_user_permissions.router)
+app.include_router(api_logs.router)
+app.include_router(login_logs.router)
+app.include_router(operation_logs.router)
+app.include_router(error_logs.router)
