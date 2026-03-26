@@ -81,8 +81,10 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> AdminUser | None:
 
 async def create_user(db: AsyncSession, dto: CreateAdminUserDTO) -> AdminUser:
     """创建用户，检查用户名唯一性。"""
-    # 检查用户名是否已存在（包含逻辑删除的，因为数据库 unique 约束是全表的）
-    exists_stmt = select(func.count()).where(AdminUser.username == dto.username)
+    # 检查用户名是否已存在（部分唯一索引仅约束 is_deleted=0）
+    exists_stmt = select(func.count()).where(
+        AdminUser.username == dto.username, AdminUser.is_deleted == 0
+    )
     count = (await db.execute(exists_stmt)).scalar_one()
     if count > 0:
         raise BusinessException(ResultCode.PARAM_ERROR, "用户名已存在")
