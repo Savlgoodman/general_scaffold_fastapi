@@ -4,17 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
+from pydantic import Field
 
-
-class CamelModel(BaseModel):
-    """所有对外 Schema 的基类，自动 snake_case → camelCase。"""
-
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-    )
+from app.schemas.base import CamelModel
 
 
 # ── Request DTOs ──────────────────────────────────────────

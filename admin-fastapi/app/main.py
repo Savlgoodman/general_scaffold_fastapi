@@ -13,7 +13,7 @@ from app.common.response import R
 from app.common.result_code import ResultCode
 from app.config import get_settings
 from app.db.redis import redis_client
-from app.routers import auth, health
+from app.routers import admin_user_permissions, admin_users, auth, health, menus, permissions, roles
 from app.security.auth_middleware import JwtAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -91,3 +91,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 # ── 路由注册 ──────────────────────────────────────────────
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(admin_users.router)
+app.include_router(roles.router)
+app.include_router(permissions.router)
+app.include_router(menus.router)
+app.include_router(admin_user_permissions.router)
