@@ -80,6 +80,55 @@ general_scaffold_fastapi/
 
 ---
 
+## 开发工作流（端到端）
+
+### 日常开发循环
+
+```
+1. 启动后端    →  cd admin-fastapi && run.bat（或 source .venv/Scripts/activate && uvicorn app.main:app --reload --port 8000）
+2. 开发 Router →  编写 Router/Service/Schema，确保 operation_id、tags、Field(description) 完整
+3. 验证 OpenAPI →  浏览器访问 http://localhost:8000/api-docs 确认 JSON 正确
+4. 生成前端 API →  cd admin-frontend && npm run generate:api（orval 从 /api-docs 生成到 src/api/generated/）
+5. 启动前端    →  npm run dev（端口 3001，API 代理到 localhost:8000）
+6. 联调验证    →  浏览器访问 http://localhost:3001 测试功能
+```
+
+### 数据库初始化
+
+```bash
+# 首次使用或需要重建表结构时
+cd admin-fastapi
+.venv/Scripts/python scripts/init_db.py    # 执行全部 Flyway SQL 并创建 admin 用户
+.venv/Scripts/python scripts/reset_admin_pwd.py  # 重置 admin 密码为 admin123
+```
+
+### E2E 测试
+
+```bash
+# 需要后端运行中
+cd admin-fastapi
+.venv/Scripts/python test_e2e_auth.py      # 认证体系全���测试（27项）
+```
+
+### 端口分配
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| FastAPI 后端 | 8000 | `uvicorn app.main:app --reload --port 8000` |
+| React 前端 | 3001 | `npm run dev`，API 代理到 8000 |
+| OpenAPI JSON | 8000/api-docs | 供 orval 消费 |
+| Swagger UI | 8000/swagger-ui.html | 后端接口文档 |
+
+### 前端 API 生成与迁移
+
+1. Python 后端某模块完成后，用户在 `admin-frontend/` 运行 `npm run generate:api`
+2. orval 从 `http://localhost:8000/api-docs` 生成到 `src/api/generated/`
+3. Java 版 API 保留在 `src/api/javaedition/` 作参考
+4. 前端逐步将 `import from '@/api/javaedition/...'` 替换为 `import from '@/api/generated/...'`
+5. 全部替换完成后删除 `javaedition/`
+
+---
+
 ## FastAPI 后端开发规范
 
 ### 构建与运行

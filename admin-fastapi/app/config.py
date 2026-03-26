@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     jwt_refresh_expiration_ms: int = 604800000   # 7 天
 
     # CORS（对应 cors.allowed-origins）
-    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:3001"
 
     # MinIO（对应 minio.*）
     minio_endpoint: str = "http://localhost:9000"
