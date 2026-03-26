@@ -9,6 +9,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
+import sqlalchemy.exc
+
 from app.common.exceptions import BusinessException
 from app.common.response import R
 from app.common.result_code import ResultCode
@@ -72,6 +74,19 @@ async def business_exception_handler(request: Request, exc: BusinessException):
     return JSONResponse(
         status_code=http_status,
         content=R.error(exc.code, exc.message).model_dump(),
+    )
+
+
+@app.exception_handler(sqlalchemy.exc.IntegrityError)
+async def integrity_error_handler(request: Request, exc):
+    logger.warning("数据库约束异常: %s", exc)
+    msg = "数据已存在或违反约束"
+    detail = str(exc.orig) if hasattr(exc, "orig") else str(exc)
+    if "unique" in detail.lower() or "duplicate" in detail.lower():
+        msg = "数据已存在（唯一约束冲突）"
+    return JSONResponse(
+        status_code=200,
+        content=R.error(ResultCode.PARAM_ERROR, msg).model_dump(),
     )
 
 
