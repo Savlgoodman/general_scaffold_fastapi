@@ -1,5 +1,7 @@
 """用户管理路由，对应 Java AdminUserController。"""
 
+import time
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,12 +17,15 @@ router = APIRouter(prefix="/api/admin/admin-users", tags=["admin-users"])
 
 @router.get("", operation_id="listUsers", summary="用户列表")
 async def list_users(
+    request: Request,
     pageNum: int = Query(1, alias="pageNum"),
     pageSize: int = Query(10, alias="pageSize"),
     keyword: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ) -> R[PageResult[AdminUserVO]]:
+    t0 = time.perf_counter()
     page = await user_service.get_user_page(db, pageNum, pageSize, keyword)
+    request.state._timing_route_ms = (time.perf_counter() - t0) * 1000
     return R.ok(data=page)
 
 

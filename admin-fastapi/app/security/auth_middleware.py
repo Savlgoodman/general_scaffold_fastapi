@@ -4,6 +4,7 @@
 """
 
 import logging
+import time
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 class JwtAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
+        t0 = time.perf_counter()
 
         # 公开路径直接放行
         if is_public_path(path):
@@ -38,7 +40,7 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
         if not jwt_provider.is_access_token(payload):
             return _unauthorized("无效的访问令牌")
 
-        # 检��黑名单
+        # 检查黑名单
         if await jwt_provider.is_in_blacklist(token):
             return _unauthorized("令牌已失效")
 
@@ -46,6 +48,7 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
         request.state.user_id = jwt_provider.get_user_id(payload)
         request.state.username = jwt_provider.get_username(payload)
         request.state.token = token
+        request.state._timing_jwt_ms = (time.perf_counter() - t0) * 1000
 
         return await call_next(request)
 

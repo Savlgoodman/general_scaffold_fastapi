@@ -6,6 +6,7 @@
 
 import json
 import logging
+import time
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -42,7 +43,9 @@ class PermissionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         method = request.method
+        t0 = time.perf_counter()
         has_perm = await _check_with_cache(user_id, path, method)
+        request.state._timing_perm_ms = (time.perf_counter() - t0) * 1000
 
         if not has_perm:
             logger.debug("用户 %s 无权访问 %s %s", user_id, method, path)
