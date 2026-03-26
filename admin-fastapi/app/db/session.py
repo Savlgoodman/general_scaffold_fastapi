@@ -22,6 +22,14 @@ async_session_factory = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI 依赖：获取数据库会话"""
+    """FastAPI 依赖：获取数据库会话。
+
+    正常结束自动 commit，异常时自动 rollback。
+    """
     async with async_session_factory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
