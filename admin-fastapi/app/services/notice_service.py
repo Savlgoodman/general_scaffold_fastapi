@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -143,7 +143,7 @@ async def publish_notice(db: AsyncSession, notice_id: int) -> None:
         raise BusinessException(ResultCode.NOT_FOUND, "公告不存在")
 
     notice.status = "published"
-    notice.publish_time = datetime.now(timezone.utc)
+    notice.publish_time = datetime.now()
     await db.flush()
 
 
