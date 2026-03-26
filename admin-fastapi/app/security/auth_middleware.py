@@ -58,7 +58,8 @@ def _extract_bearer_token(request: Request) -> str | None:
 
 
 def _unauthorized(message: str) -> JSONResponse:
+    """返回 HTTP 401，前端拦截器依赖 HTTP 状态码触发 token 刷新。"""
     return JSONResponse(
-        status_code=200,
+        status_code=401,
         content=R.error(ResultCode.UNAUTHORIZED, message).model_dump(),
     )

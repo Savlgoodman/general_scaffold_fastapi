@@ -67,8 +67,10 @@ app.add_middleware(
 @app.exception_handler(BusinessException)
 async def business_exception_handler(request: Request, exc: BusinessException):
     logger.warning("业务异常: code=%s, message=%s", exc.code, exc.message)
+    # 401/403 使用真实 HTTP 状态码，前端拦截器依赖此触发 token 刷新
+    http_status = exc.code if exc.code in (401, 403) else 200
     return JSONResponse(
-        status_code=200,
+        status_code=http_status,
         content=R.error(exc.code, exc.message).model_dump(),
     )
 
