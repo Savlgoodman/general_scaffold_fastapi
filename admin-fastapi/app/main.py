@@ -24,6 +24,7 @@ from app.routers import (
     system_monitor, tasks,
 )
 from app.security.auth_middleware import JwtAuthMiddleware
+from app.security.permission_middleware import PermissionMiddleware
 from app.services.log_write_service import write_error_log
 from app.utils.ip_utils import get_client_ip
 
@@ -53,7 +54,8 @@ app = FastAPI(
 
 
 # ── 中间件（注册顺序与执行顺序相反）─────────────────────
-# 执行顺序：CORS → API Log → JWT Auth → Router
+# 执行顺序：CORS → API Log → JWT Auth → Permission Check → Router
+app.add_middleware(PermissionMiddleware)
 app.add_middleware(JwtAuthMiddleware)
 app.add_middleware(ApiLogMiddleware)
 app.add_middleware(
