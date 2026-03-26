@@ -313,16 +313,26 @@ async def _get_user_menus(db: AsyncSession, user: AdminUser) -> list[MenuVO]:
                 AdminRoleMenu.role_id.in_(role_ids), AdminRoleMenu.is_deleted == 0
             )
         )
-        menu_ids = list(set(result.scalars().all()))
-        if not menu_ids:
+        assigned_ids = set(result.scalars().all())
+        if not assigned_ids:
             return []
 
+        # 查全量菜单用于回溯父级
         result = await db.execute(
-            select(AdminMenu).where(
-                AdminMenu.id.in_(menu_ids), AdminMenu.is_deleted == 0
-            ).order_by(AdminMenu.sort)
+            select(AdminMenu).where(AdminMenu.is_deleted == 0).order_by(AdminMenu.sort)
         )
-        all_menus = result.scalars().all()
+        all_db_menus = result.scalars().all()
+        menu_by_id = {m.id: m for m in all_db_menus}
+
+        # 回溯补齐所有祖先菜单，确保树完整
+        needed_ids = set(assigned_ids)
+        for mid in assigned_ids:
+            m = menu_by_id.get(mid)
+            while m and m.parent_id and m.parent_id in menu_by_id:
+                needed_ids.add(m.parent_id)
+                m = menu_by_id.get(m.parent_id)
+
+        all_menus = [m for m in all_db_menus if m.id in needed_ids]
 
     return _build_menu_tree(all_menus)
 

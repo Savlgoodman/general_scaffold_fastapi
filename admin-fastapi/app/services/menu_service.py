@@ -102,29 +102,22 @@ async def get_user_menu_tree(db: AsyncSession, user_id: int) -> list[MenuVO]:
     if not menu_ids:
         return []
 
-    # 3. 查菜单详情
-    m_stmt = (
-        select(AdminMenu)
-        .where(AdminMenu.id.in_(menu_ids), AdminMenu.is_deleted == 0)
-        .order_by(AdminMenu.sort.asc())
+    # 3. 查全量菜单用于回溯父级
+    m_result = await db.execute(
+        select(AdminMenu).where(AdminMenu.is_deleted == 0).order_by(AdminMenu.sort.asc())
     )
-    m_result = await db.execute(m_stmt)
-    menus = list(m_result.scalars().all())
+    all_db_menus = list(m_result.scalars().all())
+    menu_by_id = {m.id: m for m in all_db_menus}
 
-    # 4. 补充缺失的父级目录，确保树结构完整
-    existing_ids = {m.id for m in menus}
-    missing_parent_ids = {
-        m.parent_id
-        for m in menus
-        if m.parent_id is not None and m.parent_id != 0 and m.parent_id not in existing_ids
-    }
-    if missing_parent_ids:
-        parent_stmt = select(AdminMenu).where(
-            AdminMenu.id.in_(missing_parent_ids), AdminMenu.is_deleted == 0
-        )
-        parent_result = await db.execute(parent_stmt)
-        menus.extend(parent_result.scalars().all())
+    # 4. 回溯补齐所有祖先菜单，确保树完整
+    needed_ids = set(menu_ids)
+    for mid in list(menu_ids):
+        m = menu_by_id.get(mid)
+        while m and m.parent_id and m.parent_id in menu_by_id:
+            needed_ids.add(m.parent_id)
+            m = menu_by_id.get(m.parent_id)
 
+    menus = [m for m in all_db_menus if m.id in needed_ids]
     return _build_menu_tree(menus)
 
 
