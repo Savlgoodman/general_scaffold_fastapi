@@ -1,11 +1,12 @@
 """用户权限管理路由，对应 Java AdminUserPermissionController。"""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.exceptions import BusinessException
 from app.common.response import R
 from app.common.result_code import ResultCode
+from app.decorators.operation_log import log_operation
 from app.db.session import get_db
 from app.schemas.menu import UserMenuOverviewVO
 from app.schemas.permission import UserPermissionOverviewVO
@@ -32,9 +33,10 @@ async def get_user_roles(id: int, db: AsyncSession = Depends(get_db)) -> R[list[
 
 
 @router.post("/{id}/roles", operation_id="syncUserRoles", summary="同步用户角色")
-async def sync_user_roles(id: int, dto: AssignRolesDTO, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def sync_user_roles(id: int, dto: AssignRolesDTO, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await _check_user_exists(db, id)
     await rbac_service.sync_user_roles(db, id, dto.role_ids)
+    log_operation(request, "权限管理", "UPDATE", description="同步用户角色", params=dto)
     return R.ok()
 
 
@@ -53,9 +55,10 @@ async def get_user_permissions(id: int, db: AsyncSession = Depends(get_db)) -> R
 
 
 @router.put("/{id}/permission-overrides", operation_id="syncUserOverrides", summary="同步用户权限覆盖")
-async def sync_user_overrides(id: int, dto: SyncUserOverridesDTO, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def sync_user_overrides(id: int, dto: SyncUserOverridesDTO, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await _check_user_exists(db, id)
     await rbac_service.sync_user_overrides(db, id, dto)
+    log_operation(request, "权限管理", "UPDATE", description="同步用户权限覆盖", params=dto)
     return R.ok()
 
 

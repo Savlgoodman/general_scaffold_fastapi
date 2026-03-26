@@ -1,11 +1,12 @@
 """通知公告路由，对应 Java NoticeController。"""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.pagination import PageResult
 from app.common.response import R
 from app.db.session import get_db
+from app.decorators.operation_log import log_operation
 from app.models.user import AdminUser
 from app.schemas.notice import CreateNoticeDTO, NoticeVO, UpdateNoticeDTO
 from app.security.security_utils import get_current_user
@@ -45,10 +46,12 @@ async def get_notice_detail(id: int, db: AsyncSession = Depends(get_db)) -> R[No
 @router.post("", operation_id="createNotice", summary="创建公告")
 async def create_notice(
     dto: CreateNoticeDTO,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     user: AdminUser = Depends(get_current_user),
 ) -> R[NoticeVO]:
     notice = await notice_service.create_notice(db, dto, user.id, user.username)
+    log_operation(request, "通知公告", "CREATE", params=dto)
     return R.ok(data=NoticeVO(
         id=notice.id, title=notice.title, content=notice.content, type=notice.type,
         status=notice.status, is_top=notice.is_top, publisher_id=notice.publisher_id,
@@ -57,8 +60,9 @@ async def create_notice(
 
 
 @router.put("/{id}", operation_id="updateNotice", summary="编辑公告")
-async def update_notice(id: int, dto: UpdateNoticeDTO, db: AsyncSession = Depends(get_db)) -> R[NoticeVO]:
+async def update_notice(id: int, dto: UpdateNoticeDTO, request: Request, db: AsyncSession = Depends(get_db)) -> R[NoticeVO]:
     notice = await notice_service.update_notice(db, id, dto)
+    log_operation(request, "通知公告", "UPDATE", params=dto)
     return R.ok(data=NoticeVO(
         id=notice.id, title=notice.title, content=notice.content, type=notice.type,
         status=notice.status, is_top=notice.is_top, create_time=notice.create_time,
@@ -66,20 +70,23 @@ async def update_notice(id: int, dto: UpdateNoticeDTO, db: AsyncSession = Depend
 
 
 @router.delete("/{id}", operation_id="deleteNotice", summary="删除公告")
-async def delete_notice(id: int, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def delete_notice(id: int, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await notice_service.delete_notice(db, id)
+    log_operation(request, "通知公告", "DELETE", description=f"id={id}")
     return R.ok()
 
 
 @router.put("/{id}/publish", operation_id="publishNotice", summary="发布公告")
-async def publish_notice(id: int, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def publish_notice(id: int, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await notice_service.publish_notice(db, id)
+    log_operation(request, "通知公告", "UPDATE", description=f"发布 id={id}")
     return R.ok()
 
 
 @router.put("/{id}/withdraw", operation_id="withdrawNotice", summary="撤回公告")
-async def withdraw_notice(id: int, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def withdraw_notice(id: int, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await notice_service.withdraw_notice(db, id)
+    log_operation(request, "通知公告", "UPDATE", description=f"撤回 id={id}")
     return R.ok()
 
 

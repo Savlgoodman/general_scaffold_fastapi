@@ -1,11 +1,12 @@
 """用户管理路由，对应 Java AdminUserController。"""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.pagination import PageResult
 from app.common.response import R
 from app.db.session import get_db
+from app.decorators.operation_log import log_operation
 from app.schemas.user import AdminUserVO, CreateAdminUserDTO, UpdateAdminUserDTO
 from app.services import user_service
 
@@ -40,7 +41,7 @@ async def get_user_detail(id: int, db: AsyncSession = Depends(get_db)) -> R[Admi
 
 
 @router.post("", operation_id="createUser", summary="创建用户")
-async def create_user(dto: CreateAdminUserDTO, db: AsyncSession = Depends(get_db)) -> R[AdminUserVO]:
+async def create_user(dto: CreateAdminUserDTO, request: Request, db: AsyncSession = Depends(get_db)) -> R[AdminUserVO]:
     user = await user_service.create_user(db, dto)
     vo = AdminUserVO(
         id=user.id, username=user.username, nickname=user.nickname,
@@ -48,11 +49,12 @@ async def create_user(dto: CreateAdminUserDTO, db: AsyncSession = Depends(get_db
         status=user.status, is_superuser=user.is_superuser,
         create_time=user.create_time, update_time=user.update_time,
     )
+    log_operation(request, "用户管理", "CREATE", params=dto, result=vo)
     return R.ok(data=vo)
 
 
 @router.put("/{id}", operation_id="updateUser", summary="更新用户")
-async def update_user(id: int, dto: UpdateAdminUserDTO, db: AsyncSession = Depends(get_db)) -> R[AdminUserVO]:
+async def update_user(id: int, dto: UpdateAdminUserDTO, request: Request, db: AsyncSession = Depends(get_db)) -> R[AdminUserVO]:
     user = await user_service.update_user(db, id, dto)
     vo = AdminUserVO(
         id=user.id, username=user.username, nickname=user.nickname,
@@ -60,17 +62,20 @@ async def update_user(id: int, dto: UpdateAdminUserDTO, db: AsyncSession = Depen
         status=user.status, is_superuser=user.is_superuser,
         create_time=user.create_time, update_time=user.update_time,
     )
+    log_operation(request, "用户管理", "UPDATE", params=dto, result=vo)
     return R.ok(data=vo)
 
 
 @router.delete("/{id}", operation_id="deleteUser", summary="删除用户")
-async def delete_user(id: int, db: AsyncSession = Depends(get_db)) -> R[None]:
+async def delete_user(id: int, request: Request, db: AsyncSession = Depends(get_db)) -> R[None]:
     await user_service.delete_user(db, id)
+    log_operation(request, "用户管理", "DELETE", description=f"id={id}")
     return R.ok()
 
 
 @router.delete("", operation_id="deleteUsersBatch", summary="批量删除用户")
 async def delete_users_batch(
+    request: Request,
     ids: list[int] = Query(...),
     db: AsyncSession = Depends(get_db),
 ) -> R[None]:
@@ -79,4 +84,5 @@ async def delete_users_batch(
     if not ids:
         raise BusinessException(ResultCode.PARAM_ERROR, "用户ID列表不能为空")
     await user_service.delete_users_batch(db, ids)
+    log_operation(request, "用户管理", "DELETE", description=f"批量删除 ids={ids}")
     return R.ok()
