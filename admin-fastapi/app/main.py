@@ -17,7 +17,9 @@ from app.db.redis import redis_client
 from app.middleware.api_log import ApiLogMiddleware
 from app.routers import (
     admin_user_permissions, admin_users, api_logs, auth, error_logs,
-    health, login_logs, menus, operation_logs, permissions, roles,
+    files, health, login_logs, menus, notices, online_users,
+    operation_logs, permissions, roles, statistics, system_config,
+    system_monitor, tasks,
 )
 from app.security.auth_middleware import JwtAuthMiddleware
 from app.services.log_write_service import write_error_log
@@ -124,3 +126,10 @@ app.include_router(api_logs.router)
 app.include_router(login_logs.router)
 app.include_router(operation_logs.router)
 app.include_router(error_logs.router)
+app.include_router(notices.router)
+app.include_router(files.router)
+app.include_router(system_config.router)
+app.include_router(system_monitor.router)
+app.include_router(statistics.router)
+app.include_router(online_users.router)
+app.include_router(tasks.router)
