@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth'
-import type { MenuVO } from '@/api/javaedition/model'
+import type { MenuVO } from '@/api/generated/model'
 import Forbidden from '@/pages/Forbidden'
 
 /** 从菜单树中提取所有 path（扁平化） */

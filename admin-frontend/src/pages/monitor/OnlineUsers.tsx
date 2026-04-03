@@ -11,9 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { RefreshCw, LogOut, Eye } from 'lucide-react'
-import { getOnlineUsers } from '@/api/javaedition/online-users/online-users'
-import { getAdminUsers } from '@/api/javaedition/admin-users/admin-users'
-import type { OnlineUserVO } from '@/api/javaedition/model'
+import { getOnlineUsers } from '@/api/generated/online-users/online-users'
+import { getAdminUsers } from '@/api/generated/admin-users/admin-users'
+import type { OnlineUserVO } from '@/api/generated/model'
 import { useAuthStore } from '@/store/auth'
 import { TableSkeleton } from '@/components/skeletons'
 

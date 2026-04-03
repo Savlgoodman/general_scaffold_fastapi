@@ -14,8 +14,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Search, RefreshCw, Eye } from 'lucide-react'
-import { getLogLogin } from '@/api/javaedition/log-login/log-login'
-import type { AdminLoginLog } from '@/api/javaedition/model'
+import { getLogLogin } from '@/api/generated/log-login/log-login'
+import type { AdminLoginLog } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
 
 const logApi = getLogLogin()

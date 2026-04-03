@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import PreferencesSheet from "./PreferencesSheet"
-import { getNotices } from "@/api/javaedition/notices/notices"
-import type { AdminNotice } from "@/api/javaedition/model"
+import { getNotices } from "@/api/generated/notices/notices"
+import type { AdminNotice } from "@/api/generated/model"
 import {
   Avatar,
   AvatarFallback,

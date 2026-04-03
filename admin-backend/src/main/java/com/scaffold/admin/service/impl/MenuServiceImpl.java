@@ -52,7 +52,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public List<MenuVO> getUserMenuTree(Long userId) {
-        // 1. 查用户的角色ID列表
+        // 1. 查用户的存活角色（过滤已删除角色）
         List<AdminUserRole> userRoles = userRoleMapper.selectList(
                 new LambdaQueryWrapper<AdminUserRole>()
                         .eq(AdminUserRole::getUserId, userId)
@@ -60,9 +60,15 @@ public class MenuServiceImpl implements MenuService {
         if (userRoles.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Long> roleIds = userRoles.stream()
-                .map(AdminUserRole::getRoleId)
-                .toList();
+        List<Long> rawRoleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
+        // 过滤已删除和禁用角色
+        List<AdminRole> activeRoles = roleMapper.selectList(
+                new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds).eq(AdminRole::getStatus, 1)
+        );
+        List<Long> roleIds = activeRoles.stream().map(AdminRole::getId).toList();
+        if (roleIds.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         // 2. 查角色关联的菜单ID列表
         List<AdminRoleMenu> roleMenus = roleMenuMapper.selectList(
@@ -148,6 +154,10 @@ public class MenuServiceImpl implements MenuService {
         }
         // 递归删除子菜单
         deleteChildren(id);
+        // 清理角色-菜单关联
+        roleMenuMapper.delete(
+            new LambdaQueryWrapper<AdminRoleMenu>().eq(AdminRoleMenu::getMenuId, id)
+        );
         menuMapper.deleteById(id);
     }
 
@@ -314,13 +324,14 @@ public class MenuServiceImpl implements MenuService {
         }
         boolean isSuperuser = user.getIsSuperuser() != null && user.getIsSuperuser() == 1;
 
-        // 查用户角色
+        // 查用户存活角色（过滤已删除角色）
         List<AdminUserRole> userRoles = userRoleMapper.selectList(
                 new LambdaQueryWrapper<AdminUserRole>().eq(AdminUserRole::getUserId, userId)
         );
-        List<Long> roleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
-        List<AdminRole> roles = roleIds.isEmpty() ? Collections.emptyList() :
-                roleMapper.selectList(new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, roleIds));
+        List<Long> rawRoleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
+        List<AdminRole> roles = rawRoleIds.isEmpty() ? Collections.emptyList() :
+                roleMapper.selectList(new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds).eq(AdminRole::getStatus, 1));
+        List<Long> roleIds = roles.stream().map(AdminRole::getId).toList();
 
         List<RoleBaseVO> roleVOs = roles.stream().map(r -> {
             RoleBaseVO vo = new RoleBaseVO();
@@ -458,6 +469,9 @@ public class MenuServiceImpl implements MenuService {
         );
         for (AdminMenu child : children) {
             deleteChildren(child.getId());
+            roleMenuMapper.delete(
+                new LambdaQueryWrapper<AdminRoleMenu>().eq(AdminRoleMenu::getMenuId, child.getId())
+            );
             menuMapper.deleteById(child.getId());
         }
     }

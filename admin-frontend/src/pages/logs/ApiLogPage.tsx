@@ -14,8 +14,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Search, RefreshCw, Eye } from 'lucide-react'
-import { getLogApi } from '@/api/javaedition/log-api/log-api'
-import type { AdminApiLog } from '@/api/javaedition/model'
+import { getLogApi } from '@/api/generated/log-api/log-api'
+import type { AdminApiLog } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
 import JsonPreview from './components/JsonPreview'
 
@@ -102,7 +102,6 @@ export default function ApiLogPage() {
                   <TableHead className="w-14 text-center h-10">ID</TableHead>
                   <TableHead className="w-20 text-center">方法</TableHead>
                   <TableHead className="text-center">路径</TableHead>
-                  <TableHead className="text-center">API名称</TableHead>
                   <TableHead className="text-center">用户</TableHead>
                   <TableHead className="w-20 text-center">状态码</TableHead>
                   <TableHead className="w-20 text-center">耗时</TableHead>
@@ -113,15 +112,17 @@ export default function ApiLogPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={10} className="p-0"><TableSkeleton rows={8} cols={10} /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="p-0"><TableSkeleton rows={8} cols={10} /></TableCell></TableRow>
                 ) : logs.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : logs.map((log, i) => (
                   <TableRow key={log.id} className={i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
                     <TableCell className="text-center font-mono text-sm py-2.5">{log.id}</TableCell>
                     <TableCell className="text-center py-2.5"><MethodBadge method={log.method} /></TableCell>
-                    <TableCell className="py-2.5 font-mono text-sm truncate max-w-xs" title={log.path}>{log.path}</TableCell>
-                    <TableCell className="text-center py-2.5 text-sm text-muted-foreground">{(log as any).apiName || '-'}</TableCell>
+                    <TableCell className="py-2.5 max-w-xs" title={log.path}>
+                      <div className="font-mono text-sm truncate">{log.path}</div>
+                      {(log as any).apiName && <div className="text-xs text-muted-foreground mt-0.5">{(log as any).apiName}</div>}
+                    </TableCell>
                     <TableCell className="text-center py-2.5">{log.username || '-'}</TableCell>
                     <TableCell className="text-center py-2.5">
                       <Badge variant={log.responseCode === 200 ? 'default' : 'destructive'} className="text-xs">{log.responseCode}</Badge>

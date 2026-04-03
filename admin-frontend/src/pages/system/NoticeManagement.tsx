@@ -15,8 +15,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, RefreshCw, Pencil, Trash2, Send, Undo2, Pin } from 'lucide-react'
-import { getNotices } from '@/api/javaedition/notices/notices'
-import type { AdminNotice } from '@/api/javaedition/model'
+import { getNotices } from '@/api/generated/notices/notices'
+import type { AdminNotice } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
 
 const MDEditor = lazy(() => import('@uiw/react-md-editor'))

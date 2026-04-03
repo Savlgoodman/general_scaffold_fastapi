@@ -17,8 +17,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Play, RefreshCw, Pencil, Eye } from 'lucide-react'
-import { getTasks } from '@/api/javaedition/tasks/tasks'
-import type { AdminTaskConfig, AdminTaskLog } from '@/api/javaedition/model'
+import { getTasks } from '@/api/generated/tasks/tasks'
+import type { AdminTaskConfig, AdminTaskLog } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
 import cronstrue from 'cronstrue/i18n'
 

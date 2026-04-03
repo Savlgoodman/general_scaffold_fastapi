@@ -15,8 +15,8 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { getAdminUsersPermission } from '@/api/javaedition/admin-users-permission/admin-users-permission'
-import type { UserPermissionOverviewVO, PermissionRow } from '@/api/javaedition/model'
+import { getAdminUsersPermission } from '@/api/generated/admin-users-permission/admin-users-permission'
+import type { UserPermissionOverviewVO, PermissionRow } from '@/api/generated/model'
 
 const permApi = getAdminUsersPermission()
 

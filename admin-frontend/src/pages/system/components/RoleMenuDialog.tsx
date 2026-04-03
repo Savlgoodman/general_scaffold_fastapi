@@ -9,8 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
 import { getIcon } from '@/lib/icon-map'
-import { getRoles } from '@/api/javaedition/roles/roles'
-import type { RoleMenuVO, RoleMenuVOGroup } from '@/api/javaedition/model'
+import { getRoles } from '@/api/generated/roles/roles'
+import type { RoleMenuVO, RoleMenuVOGroup } from '@/api/generated/model'
 
 const rolesApi = getRoles()
 

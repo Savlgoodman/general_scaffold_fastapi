@@ -6,6 +6,12 @@ import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.mapper.AdminRoleMapper;
+import com.scaffold.admin.mapper.AdminUserRoleMapper;
+import com.scaffold.admin.mapper.AdminRolePermissionMapper;
+import com.scaffold.admin.mapper.AdminRoleMenuMapper;
+import com.scaffold.admin.model.entity.AdminUserRole;
+import com.scaffold.admin.model.entity.AdminRolePermission;
+import com.scaffold.admin.model.entity.AdminRoleMenu;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminRole;
@@ -21,6 +27,9 @@ import java.util.List;
 public class RoleServiceImpl implements RoleService {
 
     private final AdminRoleMapper roleMapper;
+    private final AdminUserRoleMapper userRoleMapper;
+    private final AdminRolePermissionMapper rolePermissionMapper;
+    private final AdminRoleMenuMapper roleMenuMapper;
 
     @Override
     public AdminRole getById(Long id) {
@@ -100,6 +109,8 @@ public class RoleServiceImpl implements RoleService {
         if (role == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "角色不存在");
         }
+        // 级联清理关联表
+        cleanupRoleAssociations(id);
         roleMapper.deleteById(id);
     }
 
@@ -108,7 +119,23 @@ public class RoleServiceImpl implements RoleService {
     @OperationLog(module = "角色管理", type = OperationType.DELETE, description = "批量删除")
     public void deleteRoles(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
+        ids.forEach(this::cleanupRoleAssociations);
         roleMapper.deleteBatchIds(ids);
+    }
+
+    /**
+     * 删除角色时级联清理：用户-角色、角色-权限、角色-菜单关联
+     */
+    private void cleanupRoleAssociations(Long roleId) {
+        userRoleMapper.delete(
+            new LambdaQueryWrapper<AdminUserRole>().eq(AdminUserRole::getRoleId, roleId)
+        );
+        rolePermissionMapper.delete(
+            new LambdaQueryWrapper<AdminRolePermission>().eq(AdminRolePermission::getRoleId, roleId)
+        );
+        roleMenuMapper.delete(
+            new LambdaQueryWrapper<AdminRoleMenu>().eq(AdminRoleMenu::getRoleId, roleId)
+        );
     }
 
     @Override

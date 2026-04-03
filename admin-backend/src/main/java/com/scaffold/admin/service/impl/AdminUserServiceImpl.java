@@ -8,7 +8,11 @@ import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.model.enums.OperationType;
 import com.scaffold.admin.mapper.AdminFileMapper;
 import com.scaffold.admin.mapper.AdminUserMapper;
+import com.scaffold.admin.mapper.AdminUserRoleMapper;
+import com.scaffold.admin.mapper.AdminUserPermissionOverrideMapper;
 import com.scaffold.admin.model.entity.AdminFile;
+import com.scaffold.admin.model.entity.AdminUserRole;
+import com.scaffold.admin.model.entity.AdminUserPermissionOverride;
 import com.scaffold.admin.model.dto.CreateAdminUserDTO;
 import com.scaffold.admin.model.dto.UpdateAdminUserDTO;
 import com.scaffold.admin.model.entity.AdminUser;
@@ -34,6 +38,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final AdminUserMapper adminUserMapper;
     private final AdminFileMapper adminFileMapper;
+    private final AdminUserRoleMapper userRoleMapper;
+    private final AdminUserPermissionOverrideMapper overrideMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -152,6 +158,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (user == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
         }
+        cleanupUserAssociations(id);
         adminUserMapper.deleteById(id);
     }
 
@@ -162,7 +169,18 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
+        ids.forEach(this::cleanupUserAssociations);
         adminUserMapper.deleteBatchIds(ids);
+    }
+
+    /** 删除用户时级联清理：用户-角色、用户权限覆盖 */
+    private void cleanupUserAssociations(Long userId) {
+        userRoleMapper.delete(
+            new LambdaQueryWrapper<AdminUserRole>().eq(AdminUserRole::getUserId, userId)
+        );
+        overrideMapper.delete(
+            new LambdaQueryWrapper<AdminUserPermissionOverride>().eq(AdminUserPermissionOverride::getUserId, userId)
+        );
     }
 
     @Override

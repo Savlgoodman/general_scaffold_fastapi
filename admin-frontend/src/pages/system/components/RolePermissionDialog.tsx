@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
-import { getRoles } from '@/api/javaedition/roles/roles'
-import type { RolePermissionFullVO, GroupSection } from '@/api/javaedition/model'
+import { getRoles } from '@/api/generated/roles/roles'
+import type { RolePermissionFullVO, GroupSection } from '@/api/generated/model'
 
 const rolesApi = getRoles()
 

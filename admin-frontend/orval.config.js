@@ -1,7 +1,7 @@
 module.exports = {
   adminApi: {
     input: {
-      target: 'http://localhost:8000/api-docs',
+      target: 'http://localhost:8080/api-docs',
     },
     output: {
       mode: 'tags-split',

@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getNotices } from "@/api/javaedition/notices/notices"
-import { getStatistics } from "@/api/javaedition/statistics/statistics"
+import { getNotices } from "@/api/generated/notices/notices"
+import { getStatistics } from "@/api/generated/statistics/statistics"
 import type {
   AdminNotice,
   StatOverviewVO,
@@ -32,7 +32,7 @@ import type {
   StatApiStatsVO,
   StatRecentLoginVO,
   StatErrorTrendVO,
-} from "@/api/javaedition/model"
+} from "@/api/generated/model"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useAuthStore } from "@/store/auth"

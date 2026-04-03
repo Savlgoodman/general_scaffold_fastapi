@@ -51,17 +51,15 @@ public class RBACServiceImpl implements RBACService {
             new LambdaQueryWrapper<AdminRole>()
                 .in(AdminRole::getId, roleIds)
                 .eq(AdminRole::getIsDeleted, 0)
+                .eq(AdminRole::getStatus, 1) // 过滤禁用角色
         );
     }
 
     @Override
     public Set<Long> getUserRoleIds(Long userId) {
-        return userRoleMapper.selectList(
-            new LambdaQueryWrapper<AdminUserRole>()
-                .eq(AdminUserRole::getUserId, userId)
-                .eq(AdminUserRole::getIsDeleted, 0)
-        ).stream()
-            .map(AdminUserRole::getRoleId)
+        // 复用 getUserRoles 确保过滤已删除角色
+        return getUserRoles(userId).stream()
+            .map(AdminRole::getId)
             .collect(Collectors.toSet());
     }
 

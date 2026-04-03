@@ -10,11 +10,11 @@ import {
   ChevronDown, ChevronRight, FolderOpen, CircleCheck, CircleX, CircleMinus,
 } from 'lucide-react'
 import { getIcon } from '@/lib/icon-map'
-import { getAdminUsersPermission } from '@/api/javaedition/admin-users-permission/admin-users-permission'
+import { getAdminUsersPermission } from '@/api/generated/admin-users-permission/admin-users-permission'
 import type {
   UserMenuOverviewVO, UserMenuOverviewVOGroup, UserMenuOverviewVOItem,
   UserPermissionOverviewVO, UserPermGroupSection, PermissionRow,
-} from '@/api/javaedition/model'
+} from '@/api/generated/model'
 
 const permApi = getAdminUsersPermission()
 
